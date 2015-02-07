@@ -1,0 +1,227 @@
+#!/bin/ksh -p
+#
+# CDDL HEADER START
+#
+# The contents of this file are subject to the terms of the
+# Common Development and Distribution License (the "License").
+# You may not use this file except in compliance with the License.
+#
+# You can obtain a copy of the license at usr/src/OPENSOLARIS.LICENSE
+# or http://www.opensolaris.org/os/licensing.
+# See the License for the specific language governing permissions
+# and limitations under the License.
+#
+# When distributing Covered Code, include this CDDL HEADER in each
+# file and include the License file at usr/src/OPENSOLARIS.LICENSE.
+# If applicable, add the following below this CDDL HEADER, with the
+# fields enclosed by brackets "[]" replaced with your own identifying
+# information: Portions Copyright [yyyy] [name of copyright owner]
+#
+# CDDL HEADER END
+#
+
+#
+# Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
+#
+# Copyright (c) 2013, 2014 Peter C. Tribble peter.tribble@gmail.com
+#
+
+. /usr/lib/brand/sparse-root/common.ksh
+
+f_interrupted=$(gettext "Installation cancelled due to interrupt.\n")
+
+m_image=$(gettext       "       Image: Preparing at %s.")
+m_smf=$(gettext		" Postinstall: Copying SMF seed repository ...")
+m_more_brokenness=$(gettext " Postinstall: Applying workarounds.")
+
+m_usage=$(gettext "\n        install [-h] [-s|-v]")
+
+m_done=$(gettext      " done.")
+
+trap_cleanup() {
+	print "$f_interrupted"
+	exit $int_code
+}
+
+int_code=$ZONE_SUBPROC_NOTCOMPLETE
+trap trap_cleanup INT
+
+extra_packages=""
+ZONENAME=""
+ZONEPATH=""
+
+# Setup i18n output
+TEXTDOMAIN="SUNW_OST_OSCMD"
+export TEXTDOMAIN
+
+while getopts "hR:z:" opt; do
+	case $opt in
+		h)	fail_usage "";;
+		R)	ZONEPATH="$OPTARG" ;;
+		z)	ZONENAME="$OPTARG" ;;
+		*)	fail_usage "";;
+	esac
+done
+shift $((OPTIND-1))
+
+if [[ -z $ZONEPATH || -z $ZONENAME ]]; then
+	print -u2 "Brand error: No zone path or name"
+	exit $ZONE_SUBPROC_USAGE
+fi
+
+# XXX shared/common script currently uses lower case zonename & zonepath
+zonename="$ZONENAME"
+zonepath="$ZONEPATH"
+
+is_brand_labeled
+brand_labeled=$?
+
+ZONEROOT=$ZONEPATH/root
+
+#
+# Before installing the zone, set up ZFS dataset hierarchy for the zone root
+# dataset.
+#
+create_active_ds
+
+printf "$m_image\n" $ZONEROOT
+
+#
+# this is where we do all the work
+#  create mountpoints for loopback mounts
+#  clone other files from global zone
+#
+# fortunately the contents file is sorted so that directories always come
+# before the filss they contain, just like cpio wants
+#
+cd /
+grep '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+grep '^/var' /var/sadm/install/contents | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
+mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib $ZONEROOT/platform
+mkdir -p $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
+mkdir -m 777 $ZONEROOT/tmp
+mkdir -m 700 $ZONEROOT/root
+ln -s ./usr/bin $ZONEROOT/bin
+
+#
+# use the saved pspool files, if we have them
+# FIXME fix up the timestamps
+# (the ownership and permissions should be correct from the original cpio)
+#
+find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/etc' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp "$1, DEST""s }' | sh -s
+find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp "$1, DEST""s }' | sh -s
+
+#
+# copy in a cleaned up contents file
+#
+egrep -v '^/(boot|kernel|devices)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
+
+#
+# This is where the dragons live.
+# Unfortunately, /lib contains the SMF manifests (which is a pretty dumb place
+# for them), so we need to create a sacrificial alternate copy and then delete
+# the manifests that aren't valid in a zone
+#
+# Note that /zonelib/lib must exist beforehand, else zone verification will
+# fail, so the path is provided by packaging. We need to populate it here if
+# that has not been done already - the first zone creation will trigger
+# population.
+#
+CFGZONELIB=$(LC_ALL=C zonecfg -z $ZONENAME info fs dir=/lib | grep special: | awk '{print $NF}')
+ZONELIBTOP=$(dirname ${CFGZONELIB})
+ZONELIB="${ZONELIBTOP}/lib"
+if [ ! -d ${ZONELIB}/svc ]; then
+grep '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm ${ZONELIBTOP}
+rm -f ${ZONELIB}/svc/manifest/system/sysevent.xml
+rm -f ${ZONELIB}/svc/manifest/system/wusb.xml
+rm -f ${ZONELIB}/svc/manifest/network/iscsi/iscsi-initiator.xml
+rm -f ${ZONELIB}/svc/manifest/network/network-discovery.xml
+rm -f ${ZONELIB}/svc/manifest/system/hal.xml
+rm -f ${ZONELIB}/svc/manifest/system/picl.xml
+rm -f ${ZONELIB}/svc/manifest/system/poold.xml
+rm -f ${ZONELIB}/svc/manifest/system/pools.xml
+rm -f ${ZONELIB}/svc/manifest/system/device/devices-fc-fabric.xml
+rm -f ${ZONELIB}/svc/manifest/system/filesystem/rmvolmgr.xml
+rm -f ${ZONELIB}/svc/manifest/system/stmf.xml
+rm -f ${ZONELIB}/svc/manifest/network/rpc/mdcomm.xml
+rm -f ${ZONELIB}/svc/manifest/network/rpc/meta.xml
+rm -f ${ZONELIB}/svc/manifest/network/rpc/metamed.xml
+rm -f ${ZONELIB}/svc/manifest/network/rpc/metamh.xml
+rm -f ${ZONELIB}/svc/manifest/system/mdmonitor.xml
+rm -f ${ZONELIB}/svc/manifest/system/metainit.xml
+rm -f ${ZONELIB}/svc/manifest/system/metasync.xml
+rm -f ${ZONELIB}/svc/manifest/platform/i86pc/acpihpd.xml
+rm -f ${ZONELIB}/svc/manifest/system/power.xml
+rm -f ${ZONELIB}/svc/manifest/system/dumpadm.xml
+rm -f ${ZONELIB}/svc/manifest/system/intrd.xml
+rm -f ${ZONELIB}/svc/manifest/system/scheduler.xml
+rm -f ${ZONELIB}/svc/manifest/network/lms.xml
+rm -f ${ZONELIB}/svc/manifest/network/npiv_config.xml
+rm -f ${ZONELIB}/svc/manifest/system/fcoe_initiator.xml
+rm -f ${ZONELIB}/svc/manifest/system/fcoe_target.xml
+rm -f ${ZONELIB}/svc/manifest/system/ipagent.xml
+rm -f ${ZONELIB}/svc/manifest/system/resource-mgmt.xml
+rm -f ${ZONELIB}/svc/manifest/system/zones.xml
+rm -f ${ZONELIB}/svc/manifest/system/zonestat.xml
+rm -f ${ZONELIB}/svc/manifest/system/auditset.xml
+rm -f ${ZONELIB}/svc/manifest/system/device/devices-audio.xml
+rm -f ${ZONELIB}/svc/manifest/system/keymap.xml
+fi
+
+#
+# remove the desktop cache updates that we don't need in a read-only zone
+#
+rm -fr $ZONEROOT/var/svc/manifest/application/desktop-cache
+
+printf "$m_smf"
+PROFILEDIR=etc/svc/profile
+rm -f $ZONEROOT/$PROFILEDIR/name_service.xml
+rm -f $ZONEROOT/$PROFILEDIR/generic.xml
+rm -f $ZONEROOT/$PROFILEDIR/inetd_services.xml
+rm -f $ZONEROOT/$PROFILEDIR/platform.xml
+ln -s ns_files.xml $ZONEROOT/$PROFILEDIR/name_service.xml
+ln -s generic_limited_net.xml $ZONEROOT/$PROFILEDIR/generic.xml
+ln -s inetd_generic.xml $ZONEROOT/$PROFILEDIR/inetd_services.xml
+ln -s platform_none.xml $ZONEROOT/$PROFILEDIR/platform.xml
+
+# This was formerly done in i.manifest
+repfile=$ZONEROOT/etc/svc/repository.db
+cp /lib/svc/seed/nonglobal.db $repfile
+chmod 0600 $repfile
+chown root:sys $repfile
+
+printf "$m_done\n"
+
+# ensure zap catalogs are present
+cp -p /etc/zap/repositories/*.catalog $ZONEROOT/etc/zap/repositories
+cp -p /etc/zap/repositories/*.overlays $ZONEROOT/etc/zap/repositories
+
+# Clean up root as a role and jack if needed
+cat $ZONEROOT/etc/user_attr | /usr/bin/sed '/^root/s:;type=role::' > $ZONEROOT/etc/user_attr.n
+mv $ZONEROOT/etc/user_attr.n $ZONEROOT/etc/user_attr
+print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/user_attr
+print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/passwd
+chmod u+w $ZONEROOT/etc/shadow
+print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/shadow
+chmod u-w $ZONEROOT/etc/shadow
+
+#
+# Make sure sysidtools run; we manually poke in the SSH action
+# so that we get an SSH key.  Yes, this is seriously borken.
+# See http://defect.opensolaris.org/bz/show_bug.cgi?id=741
+#
+printf "$m_more_brokenness\n"
+/usr/sbin/sysidconfig -b $ZONEROOT -a /lib/svc/method/sshd
+touch $ZONEROOT/etc/.UNCONFIGURED
+
+printf "$m_complete\n\n" ${SECONDS}
+if (( $brand_labeled == 0 )); then
+	printf "$m_postnote\n"
+	printf "$m_postnote2\n"
+else
+	# Umount the dataset on the root.
+	umount $ZONEROOT || printf "$f_zfs_unmount" "$ZONEPATH/root"
+fi
+
+exit $ZONE_SUBPROC_OK

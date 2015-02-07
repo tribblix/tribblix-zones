@@ -1,0 +1,94 @@
+I started with a copy of /usr/lib/brand/ipkg
+
+Changed /usr/lib/brand/ipkg to /usr/lib/brand/sparse-root globally
+
+foreach file ( * )
+gsed -i s:/usr/lib/brand/ipkg:/usr/lib/brand/sparse-root:g $file
+end
+
+
+So we need to replace pkgcreatezone:
+
+cat /var/sadm/install/contents | nawk '{print $1}' | nawk -F/ '{print $2}' | uniq -c
+
+bin        - create symlink
+boot 	   - kill
+dev	   - ignore (zoneadm handles it)
+devices	   - kill
+etc	   - populate with fresh copy
+export	   - create empty
+home	   - skip
+kernel	   - kill
+lib	   - lofs mount
+mnt	   - create empty
+opt	   - skip (for tribblix zones anyway)
+platform   - lofs mount
+proc	   - ignore (zoneadm handles it)
+sbin	   - lofs mount
+system	   - ignore (zoneadm handles it)
+tmp	   - create empty
+usr	   - lofs mount
+var	   - populate with fresh copy
+
+for lofs mounts, need to mkdir the mountpoint
+
+Need to handle /var/sadm specially; remove any paths from the contents
+file starting with the killed directories.
+
+For etc and var, either copy the global zone or the pspooled file. By
+only copying what the packaging system says is there, we should avoid
+copying crap. Then copy /var/sadm with a fixed up contents file.
+
+Handling /lib gets nasty; it contains SMF manifests which we don't want
+in a zone, so I've forced a copy under /zonelib/lib which we can edit
+(in the global zone).
+
+While sparse-root is the brand, you need a template. So that's what
+TRIBsparse.xml is - which goes into /etc/zones, and then you 'create
+-t TRIBsparse' in zonecfg.
+
+TODO:
+
+fix root as a role and jack
+
+ensure the initial BE has a valid UUID, because the uninstall checks
+for zone BEs that match the global zone's BE; if they're null the
+umount isn't called and you get an rm busy error, and the zone isn't
+uninstalled properly
+
+Solaris and OI have a makeuuid command; Tribblix skips it
+
+Could add TRIBsys-mgmt-product-registry so it's included. And need 2
+packages for whole and sparse-root zones
+
+So if I manually set
+
+zfs set org.opensolaris.libbe:uuid=51f2d0f4-df6e-6e48-dc0a-a74f37e14930 rpool/ROOT/tribblix
+
+Then 'beadm list -H' shows sensible output, and for a new zone zfs
+shows the right property on the zone filesystem
+
+# zfs get all|grep parent
+rpool/export/zones/pt2/ROOT/zbe  org.opensolaris.libbe:parentbe  51f2d0f4-df6e-6e48-dc0a-a74f37e14930  local
+
+and then zoneadm uninstall works correctly
+
+
+Cleanup done:
+
+Add my copyright
+Remove fmri_compare
+sparse-root:
+  pkgcreatezone: remove -a, -e, -d flags, as they aren't relevant
+    -p and -u only apply to p2v, so aren't relevant either
+    -s and -v are only passed to p2v, so they go as well
+  config.xml: clean up installopts
+  image_install: kill it completely, and p2v
+  clone: check sys-unconfig exists before use
+whole-root:
+  use -o for overlays not -e for extra packages
+
+Creating the packages:
+======================
+
+$TRIBBLIX/build/create_pkg TRIBblix-zones $TRIBBLIX/tribblix-zones /tmp
