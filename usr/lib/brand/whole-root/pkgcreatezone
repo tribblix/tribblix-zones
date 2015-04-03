@@ -206,7 +206,7 @@ if [ -n "$copy_overlays" ]; then
 	fi
     done
     cat ${TDIR}/plist | sort | uniq > ${TDIR}/splist 
-    /usr/bin/gfgrep -w -f ${TDIR}/splist ${CONTENTS_SOURCE} > ${TDIR}/contents
+    /usr/gnu/bin/grep -F -w -f ${TDIR}/splist ${CONTENTS_SOURCE} > ${TDIR}/contents
     CONTENTS_SOURCE=${TDIR}/contents
     cd /var/sadm/pkg
     /bin/ls -1 | fgrep -xv -f ${TDIR}/splist > ${TDIR}/xplist
