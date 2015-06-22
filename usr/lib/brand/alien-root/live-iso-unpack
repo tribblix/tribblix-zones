@@ -1,0 +1,243 @@
+#!/bin/sh
+#
+# unpack an iso into a directory
+#
+# usage: -d destination file.iso
+#
+
+usage() {
+	echo "Usage: $0 -d destination file.iso"
+	exit 2
+}
+
+#
+# the boot or root archive is a compressed ufs file system
+#
+unpack_archive() {
+AFILE=$1
+if [ -f $AFILE ]; then
+  cp $AFILE ${TMPWRK}/tt1.gz
+  gunzip ${TMPWRK}/tt1.gz
+  AFDEV=`/usr/sbin/lofiadm -a ${TMPWRK}/tt1`
+  AFMNT=/mnt.arch.$$
+  mkdir $AFMNT
+  /usr/sbin/mount -Fufs -o ro $AFDEV $AFMNT
+  cd $AFMNT
+  /usr/bin/find * -print -depth | cpio -pdm ${DESTDIR}
+  cd /
+  /usr/sbin/umount $AFMNT
+  /usr/sbin/lofiadm -d $AFDEV
+  rmdir $AFMNT
+  rm ${TMPWRK}/tt1
+fi
+}
+
+#
+# solaris.zlib is a lofi-compressed hsfs file system
+# containing /usr, rooted at /usr
+#
+unpack_solaris_zlib() {
+AFILE=$1
+if [ -f $AFILE ]; then
+  AFDEV=`/usr/sbin/lofiadm -a ${AFILE}`
+  AFMNT=/mnt.arch.$$
+  mkdir $AFMNT
+  /usr/sbin/mount -Fhsfs -o ro $AFDEV $AFMNT
+  cd $AFMNT
+  mkdir -p ${DESTDIR}/usr
+  /usr/bin/find * -print -depth | cpio -pdm ${DESTDIR}/usr
+  cd /
+  /usr/sbin/umount $AFMNT
+  /usr/sbin/lofiadm -d $AFDEV
+  rmdir $AFMNT
+fi
+}
+
+#
+# solarismisc.zlib is a lofi-compressed hsfs file system
+# containing (possibly) etc, opt, and var, rooted at /.
+# the live cd has symlinks into this misc area, so we need
+# to unpick all that mess
+#
+unpack_solarismisc_zlib() {
+AFILE=$1
+if [ -f $AFILE ]; then
+  AFDEV=`/usr/sbin/lofiadm -a ${AFILE}`
+  AFMNT=/mnt.arch.$$
+  mkdir $AFMNT
+  /usr/sbin/mount -Fhsfs -o ro $AFDEV $AFMNT
+  cd $AFMNT
+  if [ -d opt ]; then
+    rm -f ${DESTDIR}/opt
+    if [ ! -d ${DESTDIR}/opt ]; then
+      /usr/bin/find opt -print -depth | cpio -pdm ${DESTDIR}
+    fi
+  fi
+  if [ -d etc ]; then
+    for targlink in `/usr/bin/find etc -xdev -type f`
+    do
+      rm -f ${DESTDIR}/${targlink}
+    done
+    /usr/bin/find etc -print -depth | cpio -pdm ${DESTDIR}
+  fi
+  if [ -d var ]; then
+    for targlink in `/usr/bin/find var -xdev -type f`
+    do
+      rm -f ${DESTDIR}/${targlink}
+    done
+    /usr/bin/find var -print -depth | cpio -pdm ${DESTDIR}
+  fi
+  cd /
+  /usr/sbin/umount $AFMNT
+  /usr/sbin/lofiadm -d $AFDEV
+  rmdir $AFMNT
+fi
+}
+
+
+case $1 in
+-d)
+	shift
+	DESTDIR=$1
+	shift
+	;;
+*)
+	usage
+	;;
+esac
+
+case $# in
+1)
+	ISOFILE=$1
+	;;
+*)
+	usage
+	;;
+esac
+
+if [ -z "$DESTDIR" ]; then
+   usage
+fi
+if [ -z "$ISOFILE" ]; then
+   usage
+fi
+
+#
+# check files exist
+#
+if [ ! -r "$ISOFILE" ]; then
+   echo "ERROR: missing input iso image"
+   exit 1
+fi
+case $DESTDIR in
+/*)
+if [ ! -d "$DESTDIR" ]; then
+   echo "ERROR: destination does not exist"
+   exit 1
+fi
+;;
+*)
+echo "ERROR: destination must be an absolute path"
+exit 1
+;;
+esac
+
+#
+# the destination must exist, and it must be empty
+#
+NF=`/bin/ls -1A $DESTDIR`
+if [ -n "$NF" ]; then
+   echo "ERROR: destination must be empty"
+   exit 1
+fi
+
+#
+# mount up the image
+#
+LOFIDEV=`/usr/sbin/lofiadm -a $ISOFILE`
+LOFIMNT=/mnt.$$
+mkdir -p $LOFIMNT
+/usr/sbin/mount -F hsfs -o ro $LOFIDEV $LOFIMNT
+
+TMPWRK=/tmp/.live-iso.$$
+mkdir -p $TMPWRK
+
+#
+# start unpacking
+#
+# there may be two copies of the root archive
+#
+unpack_archive ${LOFIMNT}/platform/i86pc/amd64/boot_archive
+unpack_archive ${LOFIMNT}/platform/i86pc/boot_archive
+
+#
+# typical opensolaris-based distros use these
+# (opensolaris, openindiana, omnios, xstreamos)
+#
+unpack_solaris_zlib ${LOFIMNT}/solaris.zlib
+unpack_solarismisc_zlib ${LOFIMNT}/solarismisc.zlib
+
+#
+# dilos has a different naming scheme and just a single file for /usr
+#
+unpack_solaris_zlib ${LOFIMNT}/usr.img.zlib
+
+#
+# clean up our temporary files
+#
+cd /
+/usr/sbin/umount $LOFIMNT
+rmdir $LOFIMNT
+/usr/sbin/lofiadm -d $LOFIDEV
+rm -fr $TMPWRK
+
+#
+# now undo the live nature of the image
+#
+# FIXME remove live package
+#
+# omnios packages - publisher omnios
+#  system%2Finstall%2Ftext-install
+#  system%2Finstall%2Fmedia%2Finternal
+#  system%2Finstall%2Fconfiguration
+#
+# xstreamos beta 3 - publisher sonicle.com
+#  system%2Finstall%2Ftext-install
+#  system%2Finstall%2Fmedia%2Finternal
+#  system%2Finstall%2Fgui-install%2Flocale
+#
+for PUBLISHER in omnios sonicle.com openindiana.org
+do
+    for RPKGNAME in system%2Finstall%2Ftext-install system%2Finstall%2Fmedia%2Finternal system%2Finstall%2Fconfiguration system%2Finstall%2Fgui-install%2Flocale system%2Finstall%2Fgui-install
+    do
+	if [ -d ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME} ]; then
+	    for dfile in `grep '^file ' ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}/* | /bin/tr ' ' '\n' | grep '^path=' | sed s:path=::`
+	    do
+		/bin/rm -f ${DESTDIR}/${dfile}
+	    done
+	    for ddir in `grep '^dir ' ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}/* | /bin/tr ' ' '\n' | grep '^path=' | sed s:path=:: | sort -r`
+	    do
+		/bin/rmdir ${DESTDIR}/$ddir
+	    done
+	fi
+	/bin/rm -fr ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}
+    done
+done
+
+#
+# for zones, we don't have /kernel /boot /devices
+#
+/usr/bin/rm -fr ${DESTDIR}/kernel
+/usr/bin/rm -fr ${DESTDIR}/boot
+/usr/bin/rm -fr ${DESTDIR}/devices
+
+#
+# replace live smf repository
+#
+/usr/bin/rm ${DESTDIR}/etc/svc/repository.db
+/usr/bin/cp -p ${DESTDIR}/lib/svc/seed/global.db ${DESTDIR}/etc/svc/repository.db
+#
+# reset the SMF profile from the live image to regular
+#
+/usr/bin/rm -f ${DESTDIR}/etc/svc/profile/generic.xml
+/usr/bin/ln -s generic_limited_net.xml ${DESTDIR}/etc/svc/profile/generic.xml

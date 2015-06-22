@@ -26,7 +26,7 @@
 # Copyright (c) 2013, 2015 Peter C. Tribble peter.tribble@gmail.com
 #
 
-. /usr/lib/brand/whole-root/common.ksh
+. /usr/lib/brand/alien-root/common.ksh
 
 f_interrupted=$(gettext "Installation cancelled due to interrupt.\n")
 
@@ -34,7 +34,7 @@ m_image=$(gettext       "       Image: Preparing at %s.")
 m_smf=$(gettext		" Postinstall: Copying SMF seed repository ...")
 m_more_brokenness=$(gettext " Postinstall: Applying workarounds.")
 
-m_usage=$(gettext "\n        install [-h]\n        [{-o|-O} overlay [...]]\n        install {-a archive|-d path} {-p|-u} [-s|-v]")
+m_usage=$(gettext "\n        install [-h]\n        install {-a archive|-d path} {-p|-u} [-s|-v]")
 
 m_done=$(gettext      " done.")
 
@@ -46,8 +46,6 @@ trap_cleanup() {
 int_code=$ZONE_SUBPROC_NOTCOMPLETE
 trap trap_cleanup INT
 
-copy_overlays=""
-add_overlays=""
 ZONENAME=""
 ZONEPATH=""
 template_mode=0
@@ -56,19 +54,19 @@ template_mode=0
 TEXTDOMAIN="SUNW_OST_OSCMD"
 export TEXTDOMAIN
 
+unset iso_image
 unset install_archive
 unset source_dir
 unset msg
 unset silent_mode
 unset verbose_mode
 
-while getopts "a:d:e:hpo:O:R:sTuvz:" opt; do
+while getopts "a:d:e:hi:pR:sTuvz:" opt; do
 	case $opt in
 		a)	install_archive="-a $OPTARG";;
 		d)	source_dir="-d $OPTARG";;
 		h)	fail_usage "";;
-		o)	copy_overlays="$copy_overlays $OPTARG" ;;
-		O)	add_overlays="$add_overlays $OPTARG" ;;
+		i)	iso_image="$OPTARG";;
 		p)	preserve_zone="-p";;
 		R)	ZONEPATH="$OPTARG" ;;
 		s)	silent_mode=1;;
@@ -83,6 +81,11 @@ shift $((OPTIND-1))
 
 if [[ -z $ZONEPATH || -z $ZONENAME ]]; then
 	print -u2 "Brand error: No zone path or name"
+	exit $ZONE_SUBPROC_USAGE
+fi
+
+if [[ -z $iso_image ]]; then
+	print -u2 "Brand error: No iso image specified"
 	exit $ZONE_SUBPROC_USAGE
 fi
 
@@ -106,18 +109,6 @@ ZONEROOT=$ZONEPATH/root
 # The install can't both preserve and unconfigure
 [[ -n $unconfig_zone && -n $preserve_zone ]] && \
     fail_usage "$f_incompat_options" "-u" "-p"
-
-# setting overlays not allowed when installing from a system image.
-if [[ -n "$install_archive" || -n "$source_dir" ]]; then
-	[[ -n "$copy_overlays" ]] && \
-	    fail_usage "$f_incompat_options" "-a|-d" "-o"
-fi
-
-# adding overlays not allowed when installing from a system image.
-if [[ -n "$install_archive" || -n "$source_dir" ]]; then
-	[[ -n "$add_overlays" ]] && \
-	    fail_usage "$f_incompat_options" "-a|-d" "-O"
-fi
 
 # p2v options are only allowed when installing from an image
 if [[ -z $install_archive && -z $source_dir ]]; then
@@ -144,7 +135,7 @@ fi
 # If we're installing from an image, branch off to that installer.
 #
 if [[ -n $install_archive || -n $source_dir ]]; then
-	/usr/lib/brand/whole-root/image_install $ZONENAME $ZONEPATH \
+	/usr/lib/brand/alien-root/image_install $ZONENAME $ZONEPATH \
 	    $install_archive $source_dir $verbose_mode $silent_mode \
 	    $unconfig_zone $preserve_zone
 	ii_result=$?
@@ -159,130 +150,14 @@ printf "$m_image\n" $ZONEROOT
 
 #
 # this is where we do all the work
-#  clone other files from global zone
+#  unpack the iso
 #
-
-overlay_list_deps() {
-    MYOVL=$1
-    OVL=/var/sadm/overlays/${MYOVL}.ovl
-    if [ -f ${OVL} ]; then
-	echo $MYOVL
-	for novl in `/usr/bin/grep '^REQUIRES=' ${OVL} | /usr/bin/sed s:REQUIRES=::`
-	do
-	    echo $novl
-	    overlay_list_deps $novl
-	done
-    fi
-}
-
-#
-# use -o to specify overlays, it follows dependencies and always installs
-# the base overlay (just in case the dependency information is faulty)
-#
-# olist is the (recursive) list of overlays to copy
-# plist is the list of all packages to copy
-# solist is the unique list of overlays to copy
-# splist is the unique list of packages to copy
-# xplist is the list of excluded packages
-# contents is the filtered contents file
-#
-CONTENTS_SOURCE="/var/sadm/install/contents"
-if [ -n "$copy_overlays" ]; then
-    echo "Configuring overlays: $copy_overlays"
-    TDIR=/tmp/.zinstall-`date | digest -a md5`.$$
-    mkdir $TDIR
-    touch $TDIR/olist $TDIR/plist
-    echo "base" >> ${TDIR}/olist
-    for OVL in $copy_overlays
-    do
-	overlay_list_deps $OVL >> ${TDIR}/olist
-    done
-    cat ${TDIR}/olist | sort | uniq > ${TDIR}/solist
-    for OVL in `cat ${TDIR}/solist`
-    do
-	if [ -f /var/sadm/overlays/${OVL}.pkgs ]; then
-	    cat /var/sadm/overlays/${OVL}.pkgs >> ${TDIR}/plist
-	fi
-    done
-    cat ${TDIR}/plist | sort | uniq > ${TDIR}/splist 
-    /usr/gnu/bin/grep -F -w -f ${TDIR}/splist ${CONTENTS_SOURCE} > ${TDIR}/contents
-    CONTENTS_SOURCE=${TDIR}/contents
-    cd /var/sadm/pkg
-    /bin/ls -1 | fgrep -xv -f ${TDIR}/splist > ${TDIR}/xplist
+if [ ! -f $iso_image ]; then
+    echo "Cannot find $iso_image"
+    exit $ZONE_SUBPROC_USAGE
 fi
 
-#
-# fortunately the contents file is sorted so that directories always come
-# before the files they contain, just like cpio wants
-#
-cd /
-grep '^/etc' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/var' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/usr' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/sbin' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/platform' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/lib' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-
-#
-# copy packaging metadata
-#
-if [ -n "$copy_overlays" ]; then
-    /usr/bin/find var/sadm/overlays -print -depth | cpio -pdm $ZONEROOT
-    mkdir -p $ZONEROOT/var/sadm/overlays/installed
-    cd $ZONEROOT/var/sadm/overlays/installed
-    rm *
-    touch `cat ${TDIR}/solist`
-    cd /var/sadm/pkg
-    mkdir -p $ZONEROOT/var/sadm/pkg
-    /usr/bin/find `cat ${TDIR}/splist` -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT/var/sadm/pkg
-    cd /
-else
-    /usr/bin/find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
-fi
-
-#
-# create standard locations
-#
-mkdir -p $ZONEROOT/mnt $ZONEROOT/opt $ZONEROOT/export
-mkdir -m 777 $ZONEROOT/tmp
-mkdir -m 700 $ZONEROOT/root
-ln -s ./usr/bin $ZONEROOT/bin
-
-#
-# use the saved pspool files, if we have them
-# FIXME fix up the timestamps
-# (the ownership and permissions should be correct from the original cpio)
-#
-cd /var/sadm/pkg
-if [ -n "$copy_overlays" ]; then
-    find `cat ${TDIR}/splist` -xdev -type f | grep '.*/pspool/.*/reloc/etc' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
-    find `cat ${TDIR}/splist` -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
-else
-    find * -xdev -type f | grep '.*/pspool/.*/reloc/etc' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
-    find * -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
-fi
-cd /
-
-#
-# copy in a cleaned up contents file
-# filter by installed overlays/packages
-#
-if [ -n "$copy_overlays" ]; then
-    egrep -v '^/(boot|kernel|devices)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
-else
-    egrep -v '^/(boot|kernel|devices)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
-fi
-
-#
-# add additional overlays
-#
-if [ -n "$add_overlays" ]; then
-    for novl in $add_overlays
-    do
-	/usr/bin/zap install-overlay -R ${ZONEROOT} $novl
-    done
-    pkgadm sync -R ${ZONEROOT} -q
-fi
+/usr/lib/brand/alien-root/live-iso-unpack -d $ZONEROOT $iso_image
 
 #
 # this is where there be dragons
@@ -325,13 +200,6 @@ rm -f ${ZONEROOT}/lib/svc/manifest/system/device/devices-audio.xml
 rm -f ${ZONEROOT}/lib/svc/manifest/system/keymap.xml
 
 #
-# remove our temporary work area
-#
-if [ -n "$copy_overlays" ]; then
-    rm -fr $TDIR
-fi
-
-#
 # if a template, we're done
 #
 if (( $template_mode == 1 )); then
@@ -356,10 +224,6 @@ chmod 0600 $repfile
 chown root:sys $repfile
 
 printf "$m_done\n"
-
-# ensure zap catalogs are present
-cp -p /etc/zap/repositories/*.catalog $ZONEROOT/etc/zap/repositories
-cp -p /etc/zap/repositories/*.overlays $ZONEROOT/etc/zap/repositories
 
 # Clean up root as a role and jack if needed
 cat $ZONEROOT/etc/user_attr | /usr/bin/sed '/^root/s:;type=role::' > $ZONEROOT/etc/user_attr.n

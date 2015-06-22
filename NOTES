@@ -88,6 +88,17 @@ sparse-root:
 whole-root:
   use -o for overlays not -e for extra packages
 
+Alien zones:
+
+An alien zone is one containing an alternative illumos distro.
+
+The smarts here is in live-iso-unpack, which takes an iso image,
+unpacks it, and munges it into whatever shape is required to
+boot as a zone.
+
+This is a separate brand so an administrator can easily spot that
+it's different, and tools can manage them appropriately.
+
 Creating the packages:
 ======================
 
