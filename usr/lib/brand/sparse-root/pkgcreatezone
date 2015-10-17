@@ -26,7 +26,7 @@
 # Copyright (c) 2013, 2015 Peter C. Tribble peter.tribble@gmail.com
 #
 
-. /usr/lib/brand/sparse-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 f_interrupted=$(gettext "Installation cancelled due to interrupt.\n")
 
@@ -92,7 +92,7 @@ printf "$m_image\n" $ZONEROOT
 #  clone other files from global zone
 #
 # fortunately the contents file is sorted so that directories always come
-# before the filss they contain, just like cpio wants
+# before the files they contain, just like cpio wants
 #
 cd /
 grep '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT

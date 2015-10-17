@@ -32,7 +32,7 @@
 # zonepath then calls the p2v script to modify the image to run in a zone.
 #
 
-. /usr/lib/brand/whole-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 m_usage=$(gettext "\n        install {-a archive|-d path} {-p|-u} [-s|-v]")
 install_log=$(gettext   "    Log File: %s")

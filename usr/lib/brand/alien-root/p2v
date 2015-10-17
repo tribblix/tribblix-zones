@@ -32,7 +32,7 @@ PATH=/usr/bin:/usr/sbin
 export PATH
 unset LD_LIBRARY_PATH
 
-. /usr/lib/brand/alien-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 LOGFILE=
 EXIT_CODE=1

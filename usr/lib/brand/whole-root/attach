@@ -24,7 +24,7 @@
 # Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
 #
 
-. /usr/lib/brand/whole-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 m_attach_log=$(gettext "Log File: %s")
 m_zfs=$(gettext "A ZFS file system was created for the zone.")

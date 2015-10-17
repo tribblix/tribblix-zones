@@ -25,7 +25,7 @@
 #
 
 
-. /usr/lib/brand/alien-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 m_usage=$(gettext  "detach [-n ].")
 

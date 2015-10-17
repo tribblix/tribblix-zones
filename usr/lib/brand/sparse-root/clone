@@ -24,7 +24,7 @@
 # Use is subject to license terms.
 #
 
-. /usr/lib/brand/sparse-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 m_usage=$(gettext "clone {sourcezone}")
 f_nosource=$(gettext "Error: unable to determine source zone dataset.")

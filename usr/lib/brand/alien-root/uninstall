@@ -32,7 +32,7 @@ bname=`basename $0`
 #
 # common shell script functions
 #
-. /usr/lib/brand/alien-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 . /usr/lib/brand/shared/uninstall.ksh
 
 #

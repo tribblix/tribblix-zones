@@ -23,7 +23,7 @@
 # Copyright (c) 2009, 2010, Oracle and/or its affiliates. All rights reserved.
 #
 
-. /usr/lib/brand/whole-root/common.ksh
+. /usr/lib/brand/tribblix-common/common.ksh
 
 # States
 # ZONE_STATE_CONFIGURED           0 (never see)
