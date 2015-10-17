@@ -22,6 +22,8 @@
 #
 # Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
 #
+# Copyright (c) 2013, 2015 Peter C. Tribble peter.tribble@gmail.com
+#
 
 unset LD_LIBRARY_PATH
 PATH=/usr/bin:/usr/sbin
@@ -33,11 +35,6 @@ PROP_PARENT="org.opensolaris.libbe:parentbe"
 PROP_ACTIVE="org.opensolaris.libbe:active"
 
 f_incompat_options=$(gettext "cannot specify both %s and %s options")
-f_sanity_detail=$(gettext  "Missing %s at %s")
-f_sanity_sparse=$(gettext  "Is this a sparse zone image?  The image must be whole-root.")
-sanity_ok=$(gettext     "  Sanity Check: Passed.  Looks like an OpenSolaris system.")
-sanity_fail=$(gettext   "  Sanity Check: FAILED (see log for details).")
-sanity_fail_vers=$(gettext  "  Sanity Check: the Solaris image (release %s) is not an OpenSolaris image and cannot be installed in this type of branded zone.")
 install_fail=$(gettext  "        Result: *** Installation FAILED ***")
 f_zfs_in_root=$(gettext "Installing a zone inside of the root pool's 'ROOT' dataset is unsupported.")
 f_zfs_create=$(gettext "Unable to create the zone's ZFS dataset.")
@@ -92,52 +89,6 @@ is_brand_labeled() {
 		list -p | awk -F: '{print $6}')
 	[[ $brand == "labeled" ]] && return 1
 	return 0
-}
-
-sanity_check() {
-	typeset dir="$1"
-	shift
-	res=0
-
-	#
-	# Check for some required directories and make sure this isn't a
-	# sparse zone image from SXCE.
-	#
-	checks="etc etc/svc var var/svc"
-	for x in $checks; do
-		if [[ ! -e $dir/$x ]]; then
-			log "$f_sanity_detail" "$x" "$dir"
-			res=1
-		fi
-	done
-	if (( $res != 0 )); then
-		log "$f_sanity_sparse"
-		log "$sanity_fail"
-		fatal "$install_fail" "$ZONENAME"
-	fi
-
-	# Check for existence of pkg command.
-	if [[ ! -x $dir/usr/bin/pkg ]]; then
-		log "$f_sanity_detail" "usr/bin/pkg" "$dir"
-		log "$sanity_fail"
-		fatal "$install_fail" "$ZONENAME"
-	fi
-
-	#
-	# XXX There should be a better way to do this.
-	# Check image release.  We only work on the same minor release as the
-	# system is running.  The INST_RELEASE file doesn't exist with IPS on
-	# OpenSolaris, so its presence means we have an earlier Solaris
-	# (i.e. non-OpenSolaris) image.
-	#
-	if [[ -f "$dir/var/sadm/system/admin/INST_RELEASE" ]]; then
-		image_vers=$(nawk -F= '{if ($1 == "VERSION") print $2}' \
-		    $dir/var/sadm/system/admin/INST_RELEASE)
-		vlog "$sanity_fail_vers" "$image_vers"
-		fatal "$install_fail" "$ZONENAME"
-	fi
-	
-	vlog "$sanity_ok"
 }
 
 get_current_gzbe() {
