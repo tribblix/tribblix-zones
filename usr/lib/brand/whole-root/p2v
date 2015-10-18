@@ -235,7 +235,7 @@ fix_smf()
 	#
 	vlog "$v_rminvalidsvcs"
 	for i in $(egrep -hv "^#" \
-	    /usr/lib/brand/whole-root/smf_disable.lst \
+	    /usr/lib/brand/tribblix-common/smf_disable.lst \
 	    /etc/brand/ipkg/smf_disable.conf)
 	do
 		# Disable the svc.
@@ -259,7 +259,7 @@ fix_smf()
 #
 rm_pkgs()
 {
-	for i in $(egrep -hv "^#" /usr/lib/brand/whole-root/pkgrm.lst \
+	for i in $(egrep -hv "^#" /usr/lib/brand/tribblix-common/pkgrm.lst \
 	    /etc/brand/ipkg/pkgrm.conf)
 	do
 		pkg info $i >/dev/null 2>&1
