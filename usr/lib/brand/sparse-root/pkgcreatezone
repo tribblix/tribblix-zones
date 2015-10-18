@@ -46,7 +46,6 @@ trap_cleanup() {
 int_code=$ZONE_SUBPROC_NOTCOMPLETE
 trap trap_cleanup INT
 
-extra_packages=""
 ZONENAME=""
 ZONEPATH=""
 
@@ -178,11 +177,6 @@ mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
 cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
 rm -f $ZONEROOT/var/sadm/install/contents.raw
 rm -fr $TBFILE
-
-#
-# remove the desktop cache updates that we don't need in a read-only zone
-#
-rm -fr $ZONEROOT/var/svc/manifest/application/desktop-cache
 
 printf "$m_smf"
 PROFILEDIR=etc/svc/profile

@@ -279,7 +279,7 @@ else
 fi
 
 #
-# remove metadata for any packages that populate /opt
+# remove metadata for any installed packages that populate /opt
 # this must be done before adding additional overlays,
 # which might populate /opt
 #
@@ -300,8 +300,8 @@ if [ -n "$add_overlays" ]; then
 fi
 
 #
-# this is where there be dragons
-# unfortunately, /lib contains the SMF manifests (which is a pretty dumb
+# This is where the dragons live.
+# Unfortunately, /lib contains the SMF manifests (which is a pretty dumb
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
 for fblack in `cat /usr/lib/brand/tribblix-common/lib.blacklist`

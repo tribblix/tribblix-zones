@@ -160,8 +160,8 @@ fi
 /usr/lib/brand/alien-root/live-iso-unpack -d $ZONEROOT $iso_image
 
 #
-# this is where there be dragons
-# unfortunately, /lib contains the SMF manifests (which is a pretty dumb
+# This is where the dragons live.
+# Unfortunately, /lib contains the SMF manifests (which is a pretty dumb
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
 for fblack in `cat /usr/lib/brand/tribblix-common/lib.blacklist`
