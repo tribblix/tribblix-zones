@@ -87,6 +87,11 @@ create_active_ds
 printf "$m_image\n" $ZONEROOT
 
 #
+# as we parse the contents file, make sure it gets flushed
+#
+/usr/bin/pkgadm sync
+
+#
 # this is where we do all the work
 #  create mountpoints for loopback mounts
 #  clone other files from global zone
@@ -115,8 +120,16 @@ find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=
 #
 # copy in a cleaned up contents file
 #
-egrep -v '^/(boot|kernel|devices)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
+egrep -v '^/(boot|kernel|devices|opt)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
 
+#
+# remove metadata for any installed packages that populate /opt
+#
+for opkg in `grep '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.blacklist`
+do
+    rm -fr $ZONEROOT/var/sadm/pkg/$opkg
+done
+	   
 #
 # This is where the dragons live.
 # Unfortunately, /lib contains the SMF manifests (which is a pretty dumb place
@@ -149,6 +162,22 @@ for fblack in `cat /usr/lib/brand/tribblix-common/std.blacklist`
 do
     rm -f ${ZONEROOT}/${fblack}
 done
+
+#
+# remove the desktop cache updates that we don't need in a read-only zone
+#
+rm -fr $ZONEROOT/var/svc/manifest/application/desktop-cache
+
+#
+# clean the blacklisted entries from the contents file
+#
+TBFILE=/tmp/bl.${ZONENAME}.fg.$$
+cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/std.blacklist > $TBFILE
+echo "/var/svc/manifest/application/desktop-cache" >> $TBFILE
+mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
+cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
+rm -f $ZONEROOT/var/sadm/install/contents.raw
+rm -fr $TBFILE
 
 #
 # remove the desktop cache updates that we don't need in a read-only zone

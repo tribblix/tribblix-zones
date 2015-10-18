@@ -176,6 +176,11 @@ overlay_list_deps() {
 }
 
 #
+# as we parse the contents file, make sure it gets flushed
+#
+/usr/bin/pkgadm sync
+
+#
 # use -o to specify overlays, it follows dependencies and always installs
 # the base overlay (just in case the dependency information is faulty)
 #
@@ -268,10 +273,20 @@ cd /
 # filter by installed overlays/packages
 #
 if [ -n "$copy_overlays" ]; then
-    egrep -v '^/(boot|kernel|devices)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
+    egrep -v '^/(boot|kernel|devices|opt)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
 else
-    egrep -v '^/(boot|kernel|devices)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
+    egrep -v '^/(boot|kernel|devices|opt)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
 fi
+
+#
+# remove metadata for any packages that populate /opt
+# this must be done before adding additional overlays,
+# which might populate /opt
+#
+for opkg in `grep '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.blacklist`
+do
+    rm -fr $ZONEROOT/var/sadm/pkg/$opkg
+done
 
 #
 # add additional overlays
@@ -301,6 +316,16 @@ for fblack in `cat /usr/lib/brand/tribblix-common/std.blacklist`
 do
     rm -f ${ZONEROOT}/${fblack}
 done
+
+#
+# clean the blacklisted entries from the contents file
+#
+TBFILE=/tmp/bl.${ZONENAME}.fg.$$
+cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/std.blacklist > $TBFILE
+mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
+cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
+rm -f $ZONEROOT/var/sadm/install/contents.raw
+rm -fr $TBFILE
 
 #
 # remove our temporary work area

@@ -9,3 +9,6 @@ lib.blacklist - a list of files under /lib that should not exist in
 
 std.blacklist - a list of files not under /lib that should not exist in
   zones.
+
+pkg.blacklist - a list of packages whose metadata should never be copied
+  to a zone
