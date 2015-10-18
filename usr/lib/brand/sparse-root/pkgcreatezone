@@ -131,43 +131,24 @@ egrep -v '^/(boot|kernel|devices)' /var/sadm/install/contents > $ZONEROOT/var/sa
 CFGZONELIB=$(LC_ALL=C zonecfg -z $ZONENAME info fs dir=/lib | grep special: | awk '{print $NF}')
 ZONELIBTOP=$(dirname ${CFGZONELIB})
 ZONELIB="${ZONELIBTOP}/lib"
-if [ ! -d ${ZONELIB}/svc ]; then
+if [ ! -d ${ZONELIBTOP}/lib/svc ]; then
 grep '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm ${ZONELIBTOP}
-rm -f ${ZONELIB}/svc/manifest/system/sysevent.xml
-rm -f ${ZONELIB}/svc/manifest/system/wusb.xml
-rm -f ${ZONELIB}/svc/manifest/network/iscsi/iscsi-initiator.xml
-rm -f ${ZONELIB}/svc/manifest/network/network-discovery.xml
-rm -f ${ZONELIB}/svc/manifest/system/hal.xml
-rm -f ${ZONELIB}/svc/manifest/system/picl.xml
-rm -f ${ZONELIB}/svc/manifest/system/poold.xml
-rm -f ${ZONELIB}/svc/manifest/system/pools.xml
-rm -f ${ZONELIB}/svc/manifest/system/device/devices-fc-fabric.xml
-rm -f ${ZONELIB}/svc/manifest/system/filesystem/rmvolmgr.xml
-rm -f ${ZONELIB}/svc/manifest/system/stmf.xml
-rm -f ${ZONELIB}/svc/manifest/network/rpc/mdcomm.xml
-rm -f ${ZONELIB}/svc/manifest/network/rpc/meta.xml
-rm -f ${ZONELIB}/svc/manifest/network/rpc/metamed.xml
-rm -f ${ZONELIB}/svc/manifest/network/rpc/metamh.xml
-rm -f ${ZONELIB}/svc/manifest/system/mdmonitor.xml
-rm -f ${ZONELIB}/svc/manifest/system/metainit.xml
-rm -f ${ZONELIB}/svc/manifest/system/metasync.xml
-rm -f ${ZONELIB}/svc/manifest/platform/i86pc/acpihpd.xml
-rm -f ${ZONELIB}/svc/manifest/system/power.xml
-rm -f ${ZONELIB}/svc/manifest/system/dumpadm.xml
-rm -f ${ZONELIB}/svc/manifest/system/intrd.xml
-rm -f ${ZONELIB}/svc/manifest/system/scheduler.xml
-rm -f ${ZONELIB}/svc/manifest/network/lms.xml
-rm -f ${ZONELIB}/svc/manifest/network/npiv_config.xml
-rm -f ${ZONELIB}/svc/manifest/system/fcoe_initiator.xml
-rm -f ${ZONELIB}/svc/manifest/system/fcoe_target.xml
-rm -f ${ZONELIB}/svc/manifest/system/ipagent.xml
-rm -f ${ZONELIB}/svc/manifest/system/resource-mgmt.xml
-rm -f ${ZONELIB}/svc/manifest/system/zones.xml
-rm -f ${ZONELIB}/svc/manifest/system/zonestat.xml
-rm -f ${ZONELIB}/svc/manifest/system/auditset.xml
-rm -f ${ZONELIB}/svc/manifest/system/device/devices-audio.xml
-rm -f ${ZONELIB}/svc/manifest/system/keymap.xml
+#
+# remove blacklisted files
+#
+for fblack in `cat /usr/lib/brand/tribblix-common/lib.blacklist`
+do
+    rm -f ${ZONELIBTOP}/${fblack}
+done
 fi
+
+#
+# and remove any other files that should never exist in a zone
+#
+for fblack in `cat /usr/lib/brand/tribblix-common/std.blacklist`
+do
+    rm -f ${ZONEROOT}/${fblack}
+done
 
 #
 # remove the desktop cache updates that we don't need in a read-only zone

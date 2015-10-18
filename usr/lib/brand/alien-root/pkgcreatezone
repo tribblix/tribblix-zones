@@ -164,40 +164,18 @@ fi
 # unfortunately, /lib contains the SMF manifests (which is a pretty dumb
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
-rm -f ${ZONEROOT}/lib/svc/manifest/system/sysevent.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/wusb.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/iscsi/iscsi-initiator.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/network-discovery.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/hal.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/picl.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/poold.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/pools.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/device/devices-fc-fabric.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/filesystem/rmvolmgr.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/stmf.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/rpc/mdcomm.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/rpc/meta.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/rpc/metamed.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/rpc/metamh.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/mdmonitor.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/metainit.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/metasync.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/platform/i86pc/acpihpd.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/power.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/dumpadm.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/intrd.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/scheduler.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/lms.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/network/npiv_config.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/fcoe_initiator.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/fcoe_target.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/ipagent.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/resource-mgmt.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/zones.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/zonestat.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/auditset.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/device/devices-audio.xml
-rm -f ${ZONEROOT}/lib/svc/manifest/system/keymap.xml
+for fblack in `cat /usr/lib/brand/tribblix-common/lib.blacklist`
+do
+    rm -f ${ZONEROOT}/${fblack}
+done
+
+#
+# and remove any other files that should never exist in a zone
+#
+for fblack in `cat /usr/lib/brand/tribblix-common/std.blacklist`
+do
+    rm -f ${ZONEROOT}/${fblack}
+done
 
 #
 # if a template, we're done

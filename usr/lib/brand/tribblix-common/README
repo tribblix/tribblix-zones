@@ -1,0 +1,11 @@
+The files here are shared amongst the various Tribblix zone brands
+
+common.ksh - functions called to the brand scripts
+
+lib.blacklist - a list of files under /lib that should not exist in
+  zones; specifically manifests for services that should not run in
+  non-global zones. This is separate from the other blacklist due to
+  the way that /zonelib is populated for sparse-root zones
+
+std.blacklist - a list of files not under /lib that should not exist in
+  zones.
