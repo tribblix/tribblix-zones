@@ -167,7 +167,7 @@ overlay_list_deps() {
     OVL=/var/sadm/overlays/${MYOVL}.ovl
     if [ -f ${OVL} ]; then
 	echo $MYOVL
-	for novl in `/usr/bin/grep '^REQUIRES=' ${OVL} | /usr/bin/sed s:REQUIRES=::`
+	for novl in `/usr/bin/awk -F= '{if ($1=="REQUIRES") print $2}' ${OVL}`
 	do
 	    echo $novl
 	    overlay_list_deps $novl
@@ -202,18 +202,18 @@ if [ -n "$copy_overlays" ]; then
     do
 	overlay_list_deps $OVL >> ${TDIR}/olist
     done
-    cat ${TDIR}/olist | sort | uniq > ${TDIR}/solist
+    cat ${TDIR}/olist | sort -u > ${TDIR}/solist
     for OVL in `cat ${TDIR}/solist`
     do
 	if [ -f /var/sadm/overlays/${OVL}.pkgs ]; then
 	    cat /var/sadm/overlays/${OVL}.pkgs >> ${TDIR}/plist
 	fi
     done
-    cat ${TDIR}/plist | sort | uniq > ${TDIR}/splist 
+    cat ${TDIR}/plist | sort -u > ${TDIR}/splist 
     /usr/gnu/bin/grep -F -w -f ${TDIR}/splist ${CONTENTS_SOURCE} > ${TDIR}/contents
     CONTENTS_SOURCE=${TDIR}/contents
     cd /var/sadm/pkg
-    /bin/ls -1 | fgrep -xv -f ${TDIR}/splist > ${TDIR}/xplist
+    /bin/ls -1U | fgrep -xv -f ${TDIR}/splist > ${TDIR}/xplist
 fi
 
 #
