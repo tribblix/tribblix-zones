@@ -235,7 +235,7 @@ create_active_ds() {
 		if (( $? == 0 )); then
 			break
 		fi
-		BENUM=`expr $BENUM + 1`
+		BENUM=$(($BENUM+1))
 		BENAME="zbe-$BENUM"
 	done
 

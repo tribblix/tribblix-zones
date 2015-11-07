@@ -89,7 +89,7 @@ case $OPT in
 	v ) opt_v="-v" ;;
 esac
 done
-shift `expr $OPTIND - 1`
+shift $((OPTIND - 1))
 
 [ $# -gt 0 ]  && usage_err
 

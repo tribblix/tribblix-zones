@@ -103,7 +103,7 @@ while [ $SNAPNUM -lt 100 ]; do
         if [ $? = 0 ]; then
                 break
 	fi
-	SNAPNUM=`expr $SNAPNUM + 1`
+	SNAPNUM=$(($SNAPNUM+1))
 	SNAPNAME="${ZONENAME}_snap$SNAPNUM"
 done
 
@@ -119,7 +119,7 @@ while [ $BENUM -lt 100 ]; do
 	if [ $? = 0 ]; then
 		break
 	fi
-	BENUM=`expr $BENUM + 1`
+	BENUM=$(($BENUM+1))
 	BENAME="zbe-$BENUM"
 done
 
@@ -148,10 +148,8 @@ trap trap_exit EXIT
 # Completion of unconfigure_zone will leave the zone root mounted for
 # ipkg brand zones.  The root won't be mounted for labeled brand zones.
 #
-if [ -x /usr/sbin/sys-unconfig ]; then
 is_brand_labeled
 (( $? == 0 )) && unconfigure_zone
-fi
 
 trap - EXIT
 exit $ZONE_SUBPROC_OK

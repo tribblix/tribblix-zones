@@ -103,7 +103,7 @@ while [ $SNAPNUM -lt 100 ]; do
         if [ $? = 0 ]; then
                 break
 	fi
-	SNAPNUM=`expr $SNAPNUM + 1`
+	SNAPNUM=$(($SNAPNUM+1))
 	SNAPNAME="${ZONENAME}_snap$SNAPNUM"
 done
 
@@ -119,7 +119,7 @@ while [ $BENUM -lt 100 ]; do
 	if [ $? = 0 ]; then
 		break
 	fi
-	BENUM=`expr $BENUM + 1`
+	BENUM=$(($BENUM+1))
 	BENAME="zbe-$BENUM"
 done
 

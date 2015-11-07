@@ -61,7 +61,7 @@ fix_net()
 	for i in $ZONEROOT/etc/hostname.* $ZONEROOT/etc/dhcp.*
 	do
 		if [[ -f "$i" ]]; then
-			NETIF_CNT=$(expr $NETIF_CNT + 1)
+			NETIF_CNT=$(($NETIF_CNT+1))
 			OLD_HOSTNET="$i"
 		fi
 	done
