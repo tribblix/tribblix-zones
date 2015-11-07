@@ -141,7 +141,7 @@ done
 # population.
 #
 CFGZONELIB=$(LC_ALL=C zonecfg -z $ZONENAME info fs dir=/lib | grep special: | awk '{print $NF}')
-ZONELIBTOP=$(dirname ${CFGZONELIB})
+ZONELIBTOP=${CFGZONELIB%/*}
 ZONELIB="${ZONELIBTOP}/lib"
 if [ ! -d ${ZONELIBTOP}/lib/svc ]; then
 grep '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm ${ZONELIBTOP}

@@ -386,7 +386,7 @@ log "$m_attach_log" "$LOGFILE"
 #
 
 # Validate that the zonepath is not in the root dataset.
-pdir=`dirname $ZONEPATH`
+pdir=${ZONEPATH%/*}
 get_zonepath_ds $pdir
 fail_zonepath_in_rootds $ZONEPATH_DS
 
@@ -426,7 +426,7 @@ if [[ "$install_media" == "-" ]]; then
 
 	#
 	# We're typically using a pre-existing mounted dataset so setting the
-	# following propery changes will cause the {zonepath}/root dataset to
+	# following property changes will cause the {zonepath}/root dataset to
 	# be unmounted.  However, a p2v with an update-on-attach will have
 	# created the dataset with the correct properties, so setting these
 	# attributes won't unmount the dataset.  Thus, we check the mount
@@ -463,7 +463,7 @@ else
 	#
 	zds=$(zfs list -H -t filesystem -o name $pdir 2>/dev/null)
 	if (( $? == 0 )); then
-		pnm=$(/usr/bin/basename $ZONEPATH)
+		pnm=${ZONEPATH##*/}
 		# The zonepath dataset might already exist.
 		zfs list -H -t filesystem -o name $zds/$pnm >/dev/null 2>&1
 		if (( $? != 0 )); then

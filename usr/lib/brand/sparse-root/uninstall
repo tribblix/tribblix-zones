@@ -25,11 +25,6 @@
 #
 
 #
-# get script name (bname) and path (dname)
-#
-bname=`basename $0`
-
-#
 # common shell script functions
 #
 . /usr/lib/brand/tribblix-common/common.ksh

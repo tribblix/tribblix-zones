@@ -78,8 +78,8 @@ get_active_ds $CURRENT_GZBE $ZONEPATH_DS
 # First make the top-level dataset.
 #
 
-pdir=`/usr/bin/dirname $ZONEPATH`
-zpname=`/usr/bin/basename $ZONEPATH`
+pdir=${ZONEPATH%/*}
+zpname=${ZONEPATH##*/}
 
 get_zonepath_ds $pdir
 zpds=$ZONEPATH_DS
