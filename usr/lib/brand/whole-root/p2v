@@ -235,8 +235,7 @@ fix_smf()
 	#
 	vlog "$v_rminvalidsvcs"
 	for i in $(egrep -hv "^#" \
-	    /usr/lib/brand/tribblix-common/smf_disable.lst \
-	    /etc/brand/ipkg/smf_disable.conf)
+	    /usr/lib/brand/tribblix-common/smf_disable.lst)
 	do
 		# Disable the svc.
 		vlog "$v_dissvc" "$i"
@@ -259,17 +258,11 @@ fix_smf()
 #
 rm_pkgs()
 {
-	for i in $(egrep -hv "^#" /usr/lib/brand/tribblix-common/pkgrm.lst \
-	    /etc/brand/ipkg/pkgrm.conf)
+	for i in $(egrep -hv "^#" /usr/lib/brand/tribblix-common/pkgrm.lst)
 	do
-		pkg info $i >/dev/null 2>&1
-		if (( $? != 0 )); then
-			continue
-		fi
-
 		vlog "$v_rmpkg" "$i"
 		zlogin -S $ZONENAME LC_ALL=C \
-		    /usr/bin/pkg -R /a uninstall -r $i </dev/null >&2 || \
+		    /usr/sbin/pkgrm -R /a $i </dev/null >&2 || \
 		    error "$e_rmpkg" $i
 	done
 }
@@ -356,8 +349,6 @@ e_badfile=$(gettext "Invalid '%s' file within the zone")
 e_tmpfile=$(gettext "Unable to create temporary file")
 v_mkdirs=$(gettext "Creating mount points")
 v_nonetfix=$(gettext "Cannot update /etc/hostname.{net} file")
-v_change_var=$(gettext "Changing the pkg variant to nonglobal...")
-e_change_var=$(gettext "Changing the pkg variant to nonglobal failed")
 v_update=$(gettext "Updating the zone software to match the global zone...")
 v_updatedone=$(gettext "Zone software update complete")
 e_badupdate=$(gettext "Updating the Zone software failed")
@@ -372,7 +363,6 @@ e_delsvc=$(gettext "deleting SMF svc '%s'")
 v_enblsvc=$(gettext "Enable SMF svc '%s'")
 e_enblsvc=$(gettext "enabling SMF svc '%s'")
 v_dissvc=$(gettext "Disable SMF svc '%s'")
-e_adminf=$(gettext "Unable to create admin file")
 v_rmpkg=$(gettext "Remove package '%s'")
 e_rmpkg=$(gettext "removing package '%s'")
 v_rmzones=$(gettext "The following zones in this image will be unusable: %s")
@@ -387,7 +377,6 @@ safe_dir etc/dfs
 safe_dir etc/zones
 safe_dir var
 safe_dir var/log
-safe_dir var/pkg
 
 # Now do the work to update the zone.
 
@@ -463,11 +452,6 @@ if (( $brand_labeled == 1 )); then
 	# ZONEROOT so we can finish processing.
 	mount_active_ds
 fi
-
-# Change the pkging variant from global zone to non-global zone.
-log "$v_change_var"
-pkg -R $ZONEROOT change-variant variant.opensolaris.zone=nonglobal || \
-    fatal "$e_change_var"
 
 #
 # Run update on attach.  State is currently 'incomplete' so use the private
