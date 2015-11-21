@@ -221,6 +221,13 @@ printf "$m_more_brokenness\n"
 /usr/sbin/sysidconfig -b $ZONEROOT -a /lib/svc/method/sshd
 touch $ZONEROOT/etc/.UNCONFIGURED
 
+#
+# If this looks like an IPS system, change the pkg variant to non-global zone.
+#
+if [ -x $ZONEROOT/usr/bin/pkg] ; then
+    chroot $ZONEROOT /usr/bin/pkg change-variant variant.opensolaris.zone=nonglobal
+fi
+
 printf "$m_complete\n\n" ${SECONDS}
 if (( $brand_labeled == 0 )); then
 	printf "$m_postnote\n"
