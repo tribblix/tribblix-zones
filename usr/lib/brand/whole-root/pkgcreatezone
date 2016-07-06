@@ -361,6 +361,7 @@ printf "$m_done\n"
 
 # ensure zap catalogs are present
 cp -p /etc/zap/repositories/*.catalog $ZONEROOT/etc/zap/repositories
+cp -p /etc/zap/repositories/*.aliases $ZONEROOT/etc/zap/repositories
 cp -p /etc/zap/repositories/*.overlays $ZONEROOT/etc/zap/repositories
 
 #

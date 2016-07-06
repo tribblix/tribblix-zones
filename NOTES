@@ -102,4 +102,4 @@ it's different, and tools can manage them appropriately.
 Creating the packages:
 ======================
 
-$TRIBBLIX/build/create_pkg TRIBblix-zones $TRIBBLIX/tribblix-zones /tmp
+$TRIBBLIX/build/create_pkg TRIBblix-zones $TRIBBLIX/tribblix-zones
