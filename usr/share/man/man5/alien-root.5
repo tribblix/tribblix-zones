@@ -1,0 +1,50 @@
+.TH "alien-root" "5" "Sep 25, 2016" "Tribblix"
+.SH "NAME"
+alien-root zone variant
+.SH DESCRIPTION
+.LP
+The alien-root zone brand in Tribblix allows you to run an
+alternative illumos distribution in a zone.
+.LP
+The current implementation simply populates the zone file systems from
+an installation ISO image. Installation ISO images from OmniOS,
+OpenIndiana, XStreamOS, and DilOS should be recognised. Any further
+customization or software installation must be done inside the zone.
+.LP
+The approach used is fragile due to the nature of stable interfaces in
+illumos. Namely, the userland in the zone must be similar to that in
+the global zone. In illumos, the stability boundary is exposed by
+libc; the kernel interface to libc is private. Therefore, the version
+of the kernel and libc in the alien zone must be similar to that in
+the global zone. No check is made for compatibility, the user is
+entirely resposnsible for making sure that the combination will work.
+.LP
+(In practice, the rate of change of kernel interfaces in illumos is
+low. While creating an alien zone from a newer version of a
+distribution than the version of Tribblix installed in the global zone
+may be problematic, if the alien distribution is older than he version
+of Tribblix in the global zone there is a good chance of success.)
+.LP
+The recommended way to create zones in Tribblix is to use the
+zone-create subcommand of the zap(1) utility.
+For an alien-root zone, specify -t alien as follows.
+.sp
+.in +2
+.nf
+zap create-zone -t alien ...
+.fi
+.in -2
+.sp
+.LP
+The location of the ISO image to be used as the source for the zone
+file system needs to be specified as follows.
+.sp
+.in +2
+.nf
+zap create-zone ... -I /path/to/distro.iso ...
+.fi
+.in -2
+.sp
+.SH SEE ALSO
+.LP
+zones(5), brands(5), zap(1)

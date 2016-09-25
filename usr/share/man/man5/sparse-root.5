@@ -1,0 +1,27 @@
+.TH "sparse-root" "5" "Sep 25, 2016" "Tribblix"
+.SH "NAME"
+sparse-root zone variant
+.SH DESCRIPTION
+.LP
+The sparse-root zone brand in Tribblix is similar, but not identical,
+to the sparse-root zones in Solaris 10.
+.LP
+The /usr, /sbin, /platform, and /lib file system hierarchies are lofs
+mounts from a parent system. By default, the parent system is the
+global zone. Unlike Solaris 10, an alternative parent, called a zone
+template, can be created and used.
+.LP
+The recommended way to create zones in Tribblix is to use the
+zone-create subcommand of the zap(1) utility.
+.LP
+For a sparse-root zone, specify -t sparse as follows.
+.sp
+.in +2
+.nf
+zap create-zone -t whole ...
+.fi
+.in -2
+.sp
+.SH SEE ALSO
+.LP
+zones(5), brands(5), whole-root(5), zap(1)

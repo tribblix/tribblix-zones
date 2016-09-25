@@ -1,0 +1,47 @@
+.TH "whole-root" "5" "Sep 25, 2016" "Tribblix"
+.SH "NAME"
+whole-root zone variant
+.SH DESCRIPTION
+.LP
+The whole-root zone brand in Tribblix is similar to, but not identical
+to, the whole-root zones in Solaris 10.
+.LP
+By default, the newly created zone will have a complete copy of the
+software installed in the global zone. Unlike Solaris 10, you can
+easily create a zone with a subset of the global zone's software
+package, and can easily add additional software.
+.LP
+The recommended way to create zones in Tribblix is to use the
+zone-create subcommand of the zap(1) utility.
+.LP
+For a whole-root zone, specify -t whole as follows.
+.sp
+.in +2
+.nf
+zap create-zone -t whole ...
+.fi
+.in -2
+.sp
+.LP
+To limit the new zone to only containing a subset of the global zone's
+installed package overlays, use the -o flag, for example.
+.sp
+.in +2
+.nf
+zap create-zone ... -o develop ...
+.fi
+.in -2
+.sp
+.LP
+To add an additional package overlay to the new zone, use the -O flag,
+for example.
+.sp
+.in +2
+.nf
+zap create-zone ... -O develop-extras ...
+.fi
+.in -2
+.sp
+.SH SEE ALSO
+.LP
+zones(5), brands(5), sparse-root(5), zap(1), overlays(5)
