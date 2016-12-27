@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# unpack an mvi (or similar) tarball into a zone root directory
+#
+# usage: -d destination tarball
+#
+
+usage() {
+	echo "Usage: $0 -d destination tarball"
+	exit 2
+}
+
+case $1 in
+-d)
+	shift
+	DESTDIR=$1
+	shift
+	;;
+*)
+	usage
+	;;
+esac
+
+case $# in
+1)
+	ISOFILE=$1
+	;;
+*)
+	usage
+	;;
+esac
+
+if [ -z "$DESTDIR" ]; then
+   usage
+fi
+if [ -z "$ISOFILE" ]; then
+   usage
+fi
+
+#
+# check files exist
+#
+if [ ! -r "$ISOFILE" ]; then
+   echo "ERROR: missing input tarball"
+   exit 1
+fi
+case $DESTDIR in
+/*)
+if [ ! -d "$DESTDIR" ]; then
+   echo "ERROR: destination does not exist"
+   exit 1
+fi
+;;
+*)
+echo "ERROR: destination must be an absolute path"
+exit 1
+;;
+esac
+
+#
+# the destination must exist, and it must be empty
+#
+NF=`/bin/ls -1A $DESTDIR`
+if [ -n "$NF" ]; then
+   echo "ERROR: destination must be empty"
+   exit 1
+fi
+
+#
+# and just unpack the tarball
+# use gtar to ensure absolute paths and anything with .. get dropped,
+# so we can't unpack the file outside the zone root
+#
+cd $DESTDIR
+/usr/bin/gtar xf $ISOFILE
