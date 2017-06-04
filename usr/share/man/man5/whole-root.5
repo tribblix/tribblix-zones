@@ -1,4 +1,4 @@
-.TH "whole-root" "5" "Sep 25, 2016" "Tribblix"
+.TH "WHOLE-ROOT" "5" "Jun 4, 2017" "Tribblix"
 .SH "NAME"
 whole-root zone variant
 .SH DESCRIPTION
@@ -12,13 +12,13 @@ easily create a zone with a subset of the global zone's software
 package, and can easily add additional software.
 .LP
 The recommended way to create zones in Tribblix is to use the
-zone-create subcommand of the zap(1) utility.
+zone-create subcommand of the \fBzap\fR(1) utility.
 .LP
 For a whole-root zone, specify -t whole as follows.
 .sp
 .in +2
 .nf
-zap create-zone -t whole ...
+\fBzap create-zone -t whole ...\fR
 .fi
 .in -2
 .sp
@@ -28,7 +28,7 @@ installed package overlays, use the -o flag, for example.
 .sp
 .in +2
 .nf
-zap create-zone ... -o develop ...
+\fBzap create-zone ... -o\fR \fIdevelop\fR \fB...\fR
 .fi
 .in -2
 .sp
@@ -38,10 +38,10 @@ for example.
 .sp
 .in +2
 .nf
-zap create-zone ... -O develop-extras ...
+\fBzap create-zone ... -O\fR \fIdevelop-extras\fR \fB...\fR
 .fi
 .in -2
 .sp
 .SH SEE ALSO
 .LP
-zones(5), brands(5), sparse-root(5), zap(1), overlays(5)
+\fBzones\fR(5), \fBbrands\fR(5), \fBsparse-root\fR(5), \fBzap\fR(1), \fBoverlays\fR(5)

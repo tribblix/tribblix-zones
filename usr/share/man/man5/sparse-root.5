@@ -1,4 +1,4 @@
-.TH "sparse-root" "5" "Sep 25, 2016" "Tribblix"
+.TH "SPARSE-ROOT" "5" "Jun 4, 2017" "Tribblix"
 .SH "NAME"
 sparse-root zone variant
 .SH DESCRIPTION
@@ -12,16 +12,16 @@ global zone. Unlike Solaris 10, an alternative parent, called a zone
 template, can be created and used.
 .LP
 The recommended way to create zones in Tribblix is to use the
-zone-create subcommand of the zap(1) utility.
+zone-create subcommand of the \fBzap\fR(1) utility.
 .LP
 For a sparse-root zone, specify -t sparse as follows.
 .sp
 .in +2
 .nf
-zap create-zone -t whole ...
+\fBzap create-zone -t sparse ...\fR
 .fi
 .in -2
 .sp
 .SH SEE ALSO
 .LP
-zones(5), brands(5), whole-root(5), zap(1)
+\fBzones\fR(5), \fBbrands\fR(5), \fBwhole-root\fR(5), \fBzap\fR(1)

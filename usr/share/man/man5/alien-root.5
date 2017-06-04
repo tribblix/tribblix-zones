@@ -1,4 +1,4 @@
-.TH "alien-root" "5" "Sep 25, 2016" "Tribblix"
+.TH "ALIEN-ROOT" "5" "Jun 4, 2017" "Tribblix"
 .SH "NAME"
 alien-root zone variant
 .SH DESCRIPTION
@@ -24,29 +24,30 @@ entirely responsible for making sure that the combination will work.
 (In practice, the rate of change of kernel interfaces in illumos is
 low. While creating an alien zone from a newer version of a
 distribution than the version of Tribblix installed in the global zone
-may be problematic, if the alien distribution is older than he version
+may be problematic, if the alien distribution is older than the version
 of Tribblix in the global zone there is a good chance of success.)
 .LP
 The recommended way to create zones in Tribblix is to use the
-zone-create subcommand of the zap(1) utility.
+zone-create subcommand of the \fBzap\fR(1) utility.
+.LP
 For an alien-root zone, specify -t alien as follows.
 .sp
 .in +2
 .nf
-zap create-zone -t alien ...
+\fBzap create-zone -t alien ...\fR
 .fi
 .in -2
 .sp
 .LP
-The location of the tarbal or ISO image to be used as the source for
+The location of the tarball or ISO image to be used as the source for
 the zone file system needs to be specified as follows.
 .sp
 .in +2
 .nf
-zap create-zone ... -I /path/to/distro.iso ...
+\fBzap create-zone ... -I\fR \fI/path/to/distro.iso\fR \fB...\fR
 .fi
 .in -2
 .sp
 .SH SEE ALSO
 .LP
-zones(5), brands(5), zap(1)
+\fBzones\fR(5), \fBbrands\fR(5), \fBzap\fR(1)
