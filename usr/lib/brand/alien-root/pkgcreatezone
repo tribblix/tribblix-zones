@@ -157,14 +157,26 @@ if [ ! -f $iso_image ]; then
 fi
 
 #
-# we can handle iso images and tarballs
+# we can handle iso images, tarballs, and zfs send streams
 #
 case $iso_image in
     *.iso)
 	/usr/lib/brand/alien-root/live-iso-unpack -d $ZONEROOT $iso_image
+	if [ $? -ne 0 ]; then
+	    exit $ZONE_SUBPROC_NOTCOMPLETE
+	fi
 	;;
     *.tar|*.tar.*)
 	/usr/lib/brand/alien-root/mvi-unpack -d $ZONEROOT $iso_image
+	if [ $? -ne 0 ]; then
+	    exit $ZONE_SUBPROC_NOTCOMPLETE
+	fi
+	;;
+    *.zfs|*.zfs.*)
+	/usr/lib/brand/alien-root/zfs-unpack -d $ZONEROOT $iso_image
+	if [ $? -ne 0 ]; then
+	    exit $ZONE_SUBPROC_NOTCOMPLETE
+	fi
 	;;
     *)
 	exit $ZONE_SUBPROC_NOTCOMPLETE
@@ -231,10 +243,30 @@ print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/shadow
 chmod u-w $ZONEROOT/etc/shadow
 
 #
-# If this looks like an IPS system, change the pkg variant to non-global zone.
+# if root has no password set, set it to a blank one
+# Note: a blank password is not the same as a blank field in shadow
+# this taken from Kayak
+#
+chmod u+w $ZONEROOT/etc/shadow
+ROOTPW='$5$kr1VgdIt$OUiUAyZCDogH/uaxH71rMeQxvpDEY2yX.x0ZQRnmeb9'
+sed -i -e 's%^root::%root:'$ROOTPW':%' $ZONEROOT/etc/shadow
+chmod u-w $ZONEROOT/etc/shadow
+
+#
+# configure nsswitch.conf to match the global zone, as not all distros
+# ship with sensible defaults
+#
+if [ -f $ZONEROOT/etc/nsswitch.conf ]; then
+    cp /etc/nsswitch.conf $ZONEROOT/etc/nsswitch.conf
+fi
+
+#
+# If this looks like an IPS system, attempt to change the pkg variant
+# to a non-global zone. This may be unsuccessful, but there's no harm
+# in trying.
 #
 if [ -x $ZONEROOT/usr/bin/pkg ]; then
-    chroot $ZONEROOT /usr/bin/pkg change-variant variant.opensolaris.zone=nonglobal
+    chroot $ZONEROOT /usr/bin/pkg change-variant variant.opensolaris.zone=nonglobal 2>/dev/null
 fi
 
 printf "$m_complete\n\n" ${SECONDS}

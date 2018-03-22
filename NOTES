@@ -96,6 +96,9 @@ The smarts here is in live-iso-unpack, which takes an iso image,
 unpacks it, and munges it into whatever shape is required to
 boot as a zone.
 
+It has been extended to add images from tarballs (like zmvi) and zfs send
+streams (such as the kayak datasets available for download from OmniOS).
+
 This is a separate brand so an administrator can easily spot that
 it's different, and tools can manage them appropriately.
 

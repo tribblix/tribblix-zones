@@ -1,0 +1,122 @@
+#!/bin/sh
+#
+# unpack a zfs send stream into a zone root directory
+#
+# usage: -d destination tarball
+#
+
+usage() {
+	echo "Usage: $0 -d destination file"
+	exit 2
+}
+
+case $1 in
+-d)
+	shift
+	DESTDIR=$1
+	shift
+	;;
+*)
+	usage
+	;;
+esac
+
+case $# in
+1)
+	ISOFILE=$1
+	;;
+*)
+	usage
+	;;
+esac
+
+if [ -z "$DESTDIR" ]; then
+   usage
+fi
+if [ -z "$ISOFILE" ]; then
+   usage
+fi
+
+#
+# check files exist
+#
+if [ ! -r "$ISOFILE" ]; then
+   echo "ERROR: missing input file"
+   exit 1
+fi
+case $DESTDIR in
+/*)
+if [ ! -d "$DESTDIR" ]; then
+   echo "ERROR: destination does not exist"
+   exit 1
+fi
+;;
+*)
+echo "ERROR: destination must be an absolute path"
+exit 1
+;;
+esac
+
+#
+# the destination must exist, and it must be empty
+#
+NF=`/bin/ls -1A $DESTDIR`
+if [ -n "$NF" ]; then
+   echo "ERROR: destination must be empty"
+   exit 1
+fi
+
+#
+# the destination must be a zfs dataset, because we're going to send a
+# zfs stream at it
+#
+MYDSET=`/usr/sbin/zfs list -H $DESTDIR 2>/dev/null | awk '{print $1}'`
+if [ -z "$MYDSET" ]; then
+    echo "ERROR: zone root must be a zfs dataset"
+    exit 1
+fi
+#
+# and it must be its own dataset mounted at the zone root
+# we can't look at the zfs mountpoint because that will be "legacy"
+# so we end up parsing df and verifying that the location is in fact
+# a mount point
+#
+MYDSET2=`/usr/bin/df -k $DESTDIR | grep / | awk '{print $1}'`
+MYDSETMP=`/usr/bin/df -k $DESTDIR | grep / | awk '{print $NF}'`
+if [ "$MYDSET" != "$MYDSET2" ]; then
+    echo "ERROR: zfs dataset mismatch"
+    exit 1
+fi
+if [ "$MYDSETMP" != "$DESTDIR" ]; then
+    echo "ERROR: zone root must be a separate zfs dataset"
+    exit 1
+fi
+
+GZCAT="/usr/bin/gzcat"
+BZCAT="/usr/bin/bzcat"
+XZCAT="/usr/bin/xz"
+if [ -x /usr/bin/pbzcat ]; then
+    BZCAT="/usr/bin/pbzcat"
+fi
+#
+# OK, we're good to go
+# need -F to send into an existing dataset
+#
+case $ISOFILE in
+    *.zfs)
+	cat $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	;;
+    *.zfs.gz)
+	${GZCAT} $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	;;
+    *.zfs.bz2)
+	${BZCAT} $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	;;
+    *.zfs.xz)
+	${XZCAT} -d -c $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	;;
+    *)
+	echo "Unrecognized file format $ISOFILE"
+	exit 1
+	;;
+esac
