@@ -43,6 +43,17 @@ Handling /lib gets nasty; it contains SMF manifests which we don't want
 in a zone, so I've forced a copy under /zonelib/lib which we can edit
 (in the global zone).
 
+The list of files to omit there is handled by a blacklist. From an
+illumos-gate package repo, in the pkg directory, look for files with
+the variant.opensolaris.zone=global property. Something like
+
+grep zone=global */* | grep -v ':dir ' | grep path=lib | tr ' ' '\n' | grep path= | sort
+
+although we only really need to filter out the SMF stuff.
+
+For whole-root zones and template zones, we can filter everything out,
+including quite a few files under /usr.
+
 While sparse-root is the brand, you need a template. So that's what
 TRIBsparse.xml is - which goes into /etc/zones, and then you 'create
 -t TRIBsparse' in zonecfg.
