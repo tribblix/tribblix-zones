@@ -25,6 +25,7 @@
 /etc/hal/fdi/preprobe/10osvendor/20-ignore-fixed-storage.fdi
 /etc/hal/fdi/preprobe/10osvendor/20-ignore-lofi.fdi
 /etc/hal/fdi/preprobe/10osvendor/20-printers.fdi
+/etc/hostname.vboxnet0 
 /etc/inet/ipqosconf.1.sample
 /etc/inet/ipqosconf.2.sample
 /etc/inet/ipqosconf.3.sample

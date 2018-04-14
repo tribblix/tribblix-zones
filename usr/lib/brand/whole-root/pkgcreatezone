@@ -258,7 +258,7 @@ fi
 # create a combined blacklist
 #
 TBFILE=/tmp/bl.${ZONENAME}.fg.$$
-cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/sparse.blacklist /usr/lib/brand/tribblix-common/whole.blacklist /usr/lib/brand/tribblix-common/std.blacklist > $TBFILE
+cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/sparse.blacklist /usr/lib/brand/tribblix-common/whole.blacklist > $TBFILE
 
 #
 # delete the files from the zone or template

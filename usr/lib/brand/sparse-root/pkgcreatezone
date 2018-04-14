@@ -156,7 +156,7 @@ fi
 #
 # and remove any other files that should never exist in a zone
 #
-for fblack in `cat /usr/lib/brand/tribblix-common/sparse.blacklist /usr/lib/brand/tribblix-common/std.blacklist`
+for fblack in `cat /usr/lib/brand/tribblix-common/sparse.blacklist`
 do
     rm -f ${ZONEROOT}/${fblack}
 done
@@ -170,7 +170,7 @@ rm -fr $ZONEROOT/var/svc/manifest/application/desktop-cache
 # clean the blacklisted entries from the contents file
 #
 TBFILE=/tmp/bl.${ZONENAME}.fg.$$
-cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/sparse.blacklist /usr/lib/brand/tribblix-common/std.blacklist > $TBFILE
+cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/sparse.blacklist > $TBFILE
 echo "/var/svc/manifest/application/desktop-cache" >> $TBFILE
 mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
 cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
