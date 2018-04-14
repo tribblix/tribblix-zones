@@ -248,24 +248,33 @@ fi
 # Unfortunately, /lib contains the SMF manifests (which is a pretty dumb
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
-for fblack in `cat /usr/lib/brand/tribblix-common/lib.blacklist`
+# we also remove files marked as invalid for a non-global zone by the
+# illumos IPS manifests - for a whole root zone or a template this covers
+# the sparse.blacklist (which is files in /etc) and the whole.blacklist
+# (which is files in /usr, /sbin, and some libraries in /lib)
+#
+
+#
+# create a combined blacklist
+#
+TBFILE=/tmp/bl.${ZONENAME}.fg.$$
+cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/sparse.blacklist /usr/lib/brand/tribblix-common/whole.blacklist /usr/lib/brand/tribblix-common/std.blacklist > $TBFILE
+
+#
+# delete the files from the zone or template
+#
+for fblack in `cat $TBFILE`
 do
     rm -f ${ZONEROOT}/${fblack}
 done
 
 #
-# and remove any other files that should never exist in a zone
+# TODO: clean up empty directories that leaves behind
 #
-for fblack in `cat /usr/lib/brand/tribblix-common/std.blacklist`
-do
-    rm -f ${ZONEROOT}/${fblack}
-done
 
 #
 # clean the blacklisted entries from the contents file
 #
-TBFILE=/tmp/bl.${ZONENAME}.fg.$$
-cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/std.blacklist > $TBFILE
 mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
 cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
 rm -f $ZONEROOT/var/sadm/install/contents.raw
