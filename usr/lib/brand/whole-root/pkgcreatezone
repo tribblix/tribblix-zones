@@ -169,7 +169,6 @@ grep '^/etc' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' |
 grep '^/var' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 grep '^/usr' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 grep '^/sbin' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/platform' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 grep '^/lib' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 
 #
@@ -217,9 +216,9 @@ cd /
 # filter by installed overlays/packages
 #
 if [ -n "$copy_overlays" ]; then
-    egrep -v '^/(boot|kernel|devices|opt)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
+    egrep -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
 else
-    egrep -v '^/(boot|kernel|devices|opt)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
+    egrep -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
 fi
 
 #

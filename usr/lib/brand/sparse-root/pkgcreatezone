@@ -101,7 +101,7 @@ cd /
 grep '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 grep '^/var' /var/sadm/install/contents | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
-mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib $ZONEROOT/platform
+mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib
 mkdir -p $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
 mkdir -m 777 $ZONEROOT/tmp
 mkdir -m 700 $ZONEROOT/root
@@ -118,7 +118,7 @@ find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=
 #
 # copy in a cleaned up contents file
 #
-egrep -v '^/(boot|kernel|devices|opt)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
+egrep -v '^/(boot|kernel|devices|opt|platform)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
 
 #
 # remove metadata for any installed packages that populate /opt

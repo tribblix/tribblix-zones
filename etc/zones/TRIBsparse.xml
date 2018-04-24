@@ -10,9 +10,6 @@
   <filesystem special="/sbin" directory="/sbin" type="lofs">
     <fsoption name="ro"/>
   </filesystem>
-  <filesystem special="/platform" directory="/platform" type="lofs">
-    <fsoption name="ro"/>
-  </filesystem>
   <filesystem special="/zonelib/lib" directory="/lib" type="lofs">
     <fsoption name="ro"/>
   </filesystem>
