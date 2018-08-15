@@ -153,8 +153,15 @@ if [ -n "$copy_overlays" ]; then
 	    cat /var/sadm/overlays/${OVL}.pkgs >> ${TDIR}/plist
 	fi
     done
-    cat ${TDIR}/plist | sort -u > ${TDIR}/splist 
-    /usr/gnu/bin/grep -F -w -f ${TDIR}/splist ${CONTENTS_SOURCE} > ${TDIR}/contents
+    cat ${TDIR}/plist | sort -u > ${TDIR}/splist
+    #
+    # we need to select all the lines containing the selected package names
+    # we can't use grep -w because the hyphen in package names is a word
+    # boundary causing some lines to be matched in error, so explictly
+    # look for the package name surrounded by whitespace
+    #
+    cat ${TDIR}/splist | awk '{print "( |^)"$1"( |$)"}' > ${TDIR}/splist2
+    /usr/gnu/bin/grep -E -f ${TDIR}/splist2 ${CONTENTS_SOURCE} > ${TDIR}/contents
     CONTENTS_SOURCE=${TDIR}/contents
     cd /var/sadm/pkg
     /bin/ls -1U | fgrep -xv -f ${TDIR}/splist > ${TDIR}/xplist
