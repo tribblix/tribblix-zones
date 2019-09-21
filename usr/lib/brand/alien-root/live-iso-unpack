@@ -225,6 +225,16 @@ do
 done
 
 #
+# if Tribblix, uninstall the live package
+# this leaves you with base-iso, you probably want to install
+# base and base-extras
+#
+if [ -f ${DESTDIR}/var/sadm/pkg/TRIBsys-install-media-internal/pkginfo ]; then
+    /usr/bin/zap uninstall -R ${DESTDIR} TRIBsys-install-media-internal
+    pkgadm sync -R ${DESTDIR} -q
+fi
+
+#
 # for zones, we don't have /kernel /boot /devices
 #
 /usr/bin/rm -fr ${DESTDIR}/kernel
