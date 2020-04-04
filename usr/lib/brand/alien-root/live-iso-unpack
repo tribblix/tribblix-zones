@@ -235,6 +235,16 @@ if [ -f ${DESTDIR}/var/sadm/pkg/TRIBsys-install-media-internal/pkginfo ]; then
 fi
 
 #
+# Needed for OpenIndiana, this might end up being a directory with almost
+# nothing in it instead of the correct symlink
+#
+if [ -d ${DESTDIR}/usr/lib/64 ]; then
+    rm -f ${DESTDIR}/usr/lib/64/libncurses*
+    rmdir ${DESTDIR}/usr/lib/64
+    ln -s amd64 ${DESTDIR}/usr/lib/64
+fi
+
+#
 # for zones, we don't have /kernel /boot /devices
 #
 /usr/bin/rm -fr ${DESTDIR}/kernel
