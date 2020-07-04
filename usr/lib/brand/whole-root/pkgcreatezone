@@ -85,6 +85,23 @@ brand_labeled=$?
 ZONEROOT=$ZONEPATH/root
 
 #
+# using ggrep is much faster on the invocations dealing with the
+# contents file
+#
+GREP=/usr/bin/grep
+EGREP=/usr/bin/egrep
+FGREP=/usr/bin/fgrep
+if [ -x /usr/gnu/bin/grep ]; then
+    GREP=/usr/gnu/bin/grep
+fi
+if [ -x /usr/gnu/bin/egrep ]; then
+    EGREP=/usr/gnu/bin/egrep
+fi
+if [ -x /usr/gnu/bin/fgrep ]; then
+    FGREP=/usr/gnu/bin/fgrep
+fi
+
+#
 # Before installing the zone, set up ZFS dataset hierarchy for the zone root
 # dataset. If creating a template, the path should already exist and we use
 # it as is.
@@ -157,8 +174,8 @@ if [ -n "$copy_overlays" ]; then
     #
     # we need to select all the lines containing the selected package names
     # we can't use grep -w because the hyphen in package names is a word
-    # boundary causing some lines to be matched in error, so explictly
-    # look for the package name surrounded by whitespace
+    # boundary causing some lines to be matched in error, so explicitly
+    # look for the package name surrounded by space
     #
     cat ${TDIR}/splist | awk '{print "( |^)"$1"( |$)"}' > ${TDIR}/splist2
     /usr/gnu/bin/grep -E -f ${TDIR}/splist2 ${CONTENTS_SOURCE} > ${TDIR}/contents
@@ -172,11 +189,11 @@ fi
 # before the files they contain, just like cpio wants
 #
 cd /
-grep '^/etc' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/var' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/usr' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/sbin' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/lib' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/etc' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/var' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/usr' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/sbin' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/lib' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 
 #
 # copy packaging metadata
@@ -223,9 +240,9 @@ cd /
 # filter by installed overlays/packages
 #
 if [ -n "$copy_overlays" ]; then
-    egrep -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
+    ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
 else
-    egrep -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
+    ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
 fi
 
 #
@@ -233,7 +250,7 @@ fi
 # this must be done before adding additional overlays,
 # which might populate /opt
 #
-for opkg in `grep '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
+for opkg in `${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
 do
     rm -fr $ZONEROOT/var/sadm/pkg/$opkg
 done
@@ -282,7 +299,7 @@ done
 # clean the ignored entries from the contents file
 #
 mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
-cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
+cat $ZONEROOT/var/sadm/install/contents.raw | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
 rm -f $ZONEROOT/var/sadm/install/contents.raw
 rm -fr $TBFILE
 

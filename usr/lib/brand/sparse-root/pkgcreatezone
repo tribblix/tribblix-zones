@@ -77,6 +77,23 @@ brand_labeled=$?
 ZONEROOT=$ZONEPATH/root
 
 #
+# using ggrep is much faster on the invocations dealing with the
+# contents file
+#
+GREP=/usr/bin/grep
+EGREP=/usr/bin/egrep
+FGREP=/usr/bin/fgrep
+if [ -x /usr/gnu/bin/grep ]; then
+    GREP=/usr/gnu/bin/grep
+fi
+if [ -x /usr/gnu/bin/egrep ]; then
+    EGREP=/usr/gnu/bin/egrep
+fi
+if [ -x /usr/gnu/bin/fgrep ]; then
+    FGREP=/usr/gnu/bin/fgrep
+fi
+
+#
 # Before installing the zone, set up ZFS dataset hierarchy for the zone root
 # dataset.
 #
@@ -98,8 +115,8 @@ printf "$m_image\n" $ZONEROOT
 # before the files they contain, just like cpio wants
 #
 cd /
-grep '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-grep '^/var' /var/sadm/install/contents | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${GREP} '^/var' /var/sadm/install/contents | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
 mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib
 mkdir -p $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
@@ -118,12 +135,12 @@ find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=
 #
 # copy in a cleaned up contents file
 #
-egrep -v '^/(boot|kernel|devices|opt|platform)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
+${EGREP} -v '^/(boot|kernel|devices|opt|platform)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
 
 #
 # remove metadata for any installed packages that populate /opt
 #
-for opkg in `grep '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
+for opkg in `${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
 do
     rm -fr $ZONEROOT/var/sadm/pkg/$opkg
 done
@@ -143,7 +160,7 @@ CFGZONELIB=$(LC_ALL=C zonecfg -z $ZONENAME info fs dir=/lib | grep special: | aw
 ZONELIBTOP=${CFGZONELIB%/*}
 ZONELIB="${ZONELIBTOP}/lib"
 if [ ! -d ${ZONELIBTOP}/lib/svc ]; then
-grep '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm ${ZONELIBTOP}
+${GREP} '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm ${ZONELIBTOP}
 #
 # remove ignored files
 #
@@ -173,7 +190,7 @@ TBFILE=/tmp/il.${ZONENAME}.fg.$$
 cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common/sparse.ignorelist > $TBFILE
 echo "/var/svc/manifest/application/desktop-cache" >> $TBFILE
 mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
-cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
+cat $ZONEROOT/var/sadm/install/contents.raw | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
 rm -f $ZONEROOT/var/sadm/install/contents.raw
 rm -fr $TBFILE
 
