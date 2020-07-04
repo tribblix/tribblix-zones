@@ -118,8 +118,7 @@ cd /
 ${GREP} '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 ${GREP} '^/var' /var/sadm/install/contents | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
 find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
-mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib
-mkdir -p $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
+mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
 mkdir -m 777 $ZONEROOT/tmp
 mkdir -m 700 $ZONEROOT/root
 ln -s ./usr/bin $ZONEROOT/bin
@@ -214,13 +213,10 @@ chown root:sys $repfile
 printf "$m_done\n"
 
 # ensure zap catalogs are present
-cp -p /etc/zap/repositories/*.catalog $ZONEROOT/etc/zap/repositories
-cp -p /etc/zap/repositories/*.aliases $ZONEROOT/etc/zap/repositories
-cp -p /etc/zap/repositories/*.overlays $ZONEROOT/etc/zap/repositories
+cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays $ZONEROOT/etc/zap/repositories
 
 # Clean up root as a role and jack if needed
-cat $ZONEROOT/etc/user_attr | /usr/bin/sed '/^root/s:;type=role::' > $ZONEROOT/etc/user_attr.n
-mv $ZONEROOT/etc/user_attr.n $ZONEROOT/etc/user_attr
+/usr/bin/sed -i '/^root/s:;type=role::' $ZONEROOT/etc/user_attr
 print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/user_attr
 print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/passwd
 chmod u+w $ZONEROOT/etc/shadow

@@ -191,8 +191,7 @@ if [ -d  $ZONEROOT/$PROFILEDIR ]; then
 fi
 
 # Clean up root as a role and jack if needed
-cat $ZONEROOT/etc/user_attr | /usr/bin/sed '/^root/s:;type=role::' > $ZONEROOT/etc/user_attr.n
-mv $ZONEROOT/etc/user_attr.n $ZONEROOT/etc/user_attr
+/usr/bin/sed -i '/^root/s:;type=role::'  $ZONEROOT/etc/user_attr
 print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/user_attr
 print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/passwd
 chmod u+w $ZONEROOT/etc/shadow
