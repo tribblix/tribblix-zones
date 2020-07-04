@@ -23,7 +23,7 @@
 #
 # Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013-2018 Peter C. Tribble peter.tribble@gmail.com
+# Copyright (c) 2013-2020 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -233,7 +233,7 @@ fi
 # this must be done before adding additional overlays,
 # which might populate /opt
 #
-for opkg in `grep '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.blacklist`
+for opkg in `grep '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
 do
     rm -fr $ZONEROOT/var/sadm/pkg/$opkg
 done
@@ -251,27 +251,27 @@ fi
 
 #
 # This is where the dragons live.
-# Unfortunately, /lib contains the SMF manifests (which is a pretty dumb
+# Unfortunately, /lib contains the SMF manifests (which is an unfortunate
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
 # we also remove files marked as invalid for a non-global zone by the
 # illumos IPS manifests - for a whole root zone or a template this covers
-# the sparse.blacklist (which is files in /etc) and the whole.blacklist
+# the sparse.ignorelist (which is files in /etc) and the whole.ignorelist
 # (which is files in /usr, /sbin, and some libraries in /lib)
 #
 
 #
-# create a combined blacklist
+# create a combined ignorelist
 #
-TBFILE=/tmp/bl.${ZONENAME}.fg.$$
-cat /usr/lib/brand/tribblix-common/lib.blacklist /usr/lib/brand/tribblix-common/sparse.blacklist /usr/lib/brand/tribblix-common/whole.blacklist > $TBFILE
+TBFILE=/tmp/il.${ZONENAME}.fg.$$
+cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common/sparse.ignorelist /usr/lib/brand/tribblix-common/whole.ignorelist > $TBFILE
 
 #
 # delete the files from the zone or template
 #
-for fblack in `cat $TBFILE`
+for fignore in `cat $TBFILE`
 do
-    rm -f ${ZONEROOT}/${fblack}
+    rm -f ${ZONEROOT}/${fignore}
 done
 
 #
@@ -279,7 +279,7 @@ done
 #
 
 #
-# clean the blacklisted entries from the contents file
+# clean the ignored entries from the contents file
 #
 mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
 cat $ZONEROOT/var/sadm/install/contents.raw | fgrep -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents

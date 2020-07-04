@@ -23,7 +23,7 @@
 #
 # Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013-2018 Peter C. Tribble peter.tribble@gmail.com
+# Copyright (c) 2013-2020 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -142,20 +142,20 @@ esac
 
 #
 # This is where the dragons live.
-# Unfortunately, /lib contains the SMF manifests (which is a pretty dumb
+# Unfortunately, /lib contains the SMF manifests (which is an unfortunate
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
-for fblack in `cat /usr/lib/brand/tribblix-common/lib.blacklist`
+for fignore in `cat /usr/lib/brand/tribblix-common/lib.ignorelist`
 do
-    rm -f ${ZONEROOT}/${fblack}
+    rm -f ${ZONEROOT}/${fignore}
 done
 
 #
 # and remove any other files that should never exist in a zone
 #
-for fblack in `cat /usr/lib/brand/tribblix-common/sparse.blacklist`
+for fignore in `cat /usr/lib/brand/tribblix-common/sparse.ignorelist`
 do
-    rm -f ${ZONEROOT}/${fblack}
+    rm -f ${ZONEROOT}/${fignore}
 done
 
 #

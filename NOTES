@@ -43,7 +43,7 @@ Handling /lib gets nasty; it contains SMF manifests which we don't want
 in a zone, so I've forced a copy under /zonelib/lib which we can edit
 (in the global zone).
 
-The list of files to omit there is handled by a blacklist. From an
+The list of files to omit there is handled by an ignorelist. From an
 illumos-gate package repo, in the pkg directory, look for files with
 the variant.opensolaris.zone=global property. Something like
 

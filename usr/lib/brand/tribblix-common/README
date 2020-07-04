@@ -2,18 +2,18 @@ The files here are shared amongst the various Tribblix zone brands
 
 common.ksh - functions called to the brand scripts
 
-lib.blacklist - a list of files under /lib that should not exist in
+lib.ignorelist - a list of files under /lib that should not exist in
   zones; specifically manifests for services that should not run in
-  non-global zones. This is separate from the other blacklists due to
+  non-global zones. This is separate from the other ignorelists due to
   the way that /zonelib is populated for sparse-root zones
 
-sparse.blacklist - a list of files not under /lib that should not exist in
+sparse.ignorelist - a list of files not under /lib that should not exist in
   zones. This list has the files that are copied into all zones, whole or
   sparse, which is essentially /etc
 
-whole.blacklist - a list of files not under /lib that should not exist in
+whole.ignorelist - a list of files not under /lib that should not exist in
   zones. This list has those files that would be mounted read-only in a
-  sparse zone, which is essntially /usr
+  sparse zone, which is essentially /usr
 
-pkg.blacklist - a list of packages whose metadata should never be copied
+pkg.ignorelist - a list of packages whose metadata should never be copied
   to a zone
