@@ -128,8 +128,7 @@ ln -s ./usr/bin $ZONEROOT/bin
 # FIXME fix up the timestamps
 # (the ownership and permissions should be correct from the original cpio)
 #
-find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/etc' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp "$1, DEST""s }' | sh -s
-find /var/sadm/pkg -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp "$1, DEST""s }' | sh -s
+find /var/sadm/pkg/*/save/pspool -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|var)' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp "$1, DEST""s }' | sh -s
 
 #
 # copy in a cleaned up contents file

@@ -227,11 +227,9 @@ ln -s ./usr/bin $ZONEROOT/bin
 #
 cd /var/sadm/pkg
 if [ -n "$copy_overlays" ]; then
-    find `cat ${TDIR}/splist` -xdev -type f | grep '.*/pspool/.*/reloc/etc' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
-    find `cat ${TDIR}/splist` -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
+    find `cat ${TDIR}/splist` -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|var)' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
 else
-    find * -xdev -type f | grep '.*/pspool/.*/reloc/etc' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
-    find * -xdev -type f | grep '.*/pspool/.*/reloc/var' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
+    find * -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|var)' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
 fi
 cd /
 
