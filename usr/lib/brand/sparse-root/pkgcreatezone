@@ -85,12 +85,13 @@ EGREP=/usr/bin/egrep
 FGREP=/usr/bin/fgrep
 if [ -x /usr/gnu/bin/grep ]; then
     GREP=/usr/gnu/bin/grep
+    EGREP="/usr/gnu/bin/grep -E"
+    FGREP="/usr/gnu/bin/grep -F"
 fi
-if [ -x /usr/gnu/bin/egrep ]; then
-    EGREP=/usr/gnu/bin/egrep
-fi
-if [ -x /usr/gnu/bin/fgrep ]; then
-    FGREP=/usr/gnu/bin/fgrep
+if [ -x /usr/gnu/bin/amd64/grep ]; then
+    GREP=/usr/gnu/bin/amd64/grep
+    EGREP="/usr/gnu/bin/amd64/grep -E"
+    FGREP="/usr/gnu/bin/amd64/grep -F"
 fi
 
 #
@@ -115,8 +116,7 @@ printf "$m_image\n" $ZONEROOT
 # before the files they contain, just like cpio wants
 #
 cd /
-${GREP} '^/etc' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-${GREP} '^/var' /var/sadm/install/contents | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${EGREP} '^/(etc|var)' /var/sadm/install/contents | nawk '{print $1}' | nawk -F= '{print $1}' | cpio -pdm $ZONEROOT
 find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
 mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
 mkdir -m 777 $ZONEROOT/tmp

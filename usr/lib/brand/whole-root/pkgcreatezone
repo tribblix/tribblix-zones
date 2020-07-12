@@ -93,12 +93,13 @@ EGREP=/usr/bin/egrep
 FGREP=/usr/bin/fgrep
 if [ -x /usr/gnu/bin/grep ]; then
     GREP=/usr/gnu/bin/grep
+    EGREP="/usr/gnu/bin/grep -E"
+    FGREP="/usr/gnu/bin/grep -F"
 fi
-if [ -x /usr/gnu/bin/egrep ]; then
-    EGREP=/usr/gnu/bin/egrep
-fi
-if [ -x /usr/gnu/bin/fgrep ]; then
-    FGREP=/usr/gnu/bin/fgrep
+if [ -x /usr/gnu/bin/amd64/grep ]; then
+    GREP=/usr/gnu/bin/amd64/grep
+    EGREP="/usr/gnu/bin/amd64/grep -E"
+    FGREP="/usr/gnu/bin/amd64/grep -F"
 fi
 
 #
@@ -189,11 +190,9 @@ fi
 # before the files they contain, just like cpio wants
 #
 cd /
-${GREP} '^/etc' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-${GREP} '^/var' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-${GREP} '^/usr' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-${GREP} '^/sbin' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
-${GREP} '^/lib' $CONTENTS_SOURCE | nawk '{print $1}' | sed 's:=: :' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${EGREP} '^/(etc|var|sbin|lib)' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+# for /usr, cut is much quicker
+${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdm $ZONEROOT
 
 #
 # copy packaging metadata
