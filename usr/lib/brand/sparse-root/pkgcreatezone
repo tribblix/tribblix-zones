@@ -189,15 +189,11 @@ cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common
 echo "/var/svc/manifest/application/desktop-cache" >> $TBFILE
 mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
 cat $ZONEROOT/var/sadm/install/contents.raw | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
-rm -f $ZONEROOT/var/sadm/install/contents.raw
-rm -fr $TBFILE
+rm -f $ZONEROOT/var/sadm/install/contents.raw $TBFILE
 
 printf "$m_smf"
 PROFILEDIR=etc/svc/profile
-rm -f $ZONEROOT/$PROFILEDIR/name_service.xml
-rm -f $ZONEROOT/$PROFILEDIR/generic.xml
-rm -f $ZONEROOT/$PROFILEDIR/inetd_services.xml
-rm -f $ZONEROOT/$PROFILEDIR/platform.xml
+rm -f $ZONEROOT/$PROFILEDIR/name_service.xml $ZONEROOT/$PROFILEDIR/generic.xml $ZONEROOT/$PROFILEDIR/inetd_services.xml $ZONEROOT/$PROFILEDIR/platform.xml
 ln -s ns_files.xml $ZONEROOT/$PROFILEDIR/name_service.xml
 ln -s generic_limited_net.xml $ZONEROOT/$PROFILEDIR/generic.xml
 ln -s inetd_generic.xml $ZONEROOT/$PROFILEDIR/inetd_services.xml

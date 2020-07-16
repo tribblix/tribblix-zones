@@ -1,6 +1,6 @@
 PKG="TRIBblix-zones"
 NAME="Tribblix zone brands"
-VERSION="0.22.4"
+VERSION="0.22.5"
 ZAP_URL="https://github.com/tribblix/tribblix-zones"
 ARCH="i386,sparc"
 CATEGORY="application"
