@@ -60,9 +60,13 @@
 /etc/sdp.conf
 /etc/security/device_policy
 /etc/security/extra_privs
+/etc/security/lib/audio_clean
 /etc/security/lib/audio_clean.windowing
 /etc/security/lib/disk_clean
 /etc/security/lib/disk_clean.windowing
+/etc/security/lib/fd_clean
+/etc/security/lib/sr_clean
+/etc/security/lib/st_clean
 /etc/security/lib/st_clean.windowing
 /etc/security/lib/wdwmsg
 /etc/security/lib/wdwwrapper
@@ -78,6 +82,7 @@
 /etc/security/tsol/tnrhtp
 /etc/security/tsol/tnzonecfg
 /etc/smhba.conf
+/etc/sock2path.d/driver%2Fnetwork%2Fbpf
 /etc/sock2path.d/driver%2Fnetwork%2Frds
 /etc/sock2path.d/driver%2Fnetwork%2Frdsv3
 /etc/sock2path.d/driver%2Fnetwork%2Fsdp
@@ -87,6 +92,7 @@
 /etc/usb/config_map.conf
 /etc/zones/SUNWblank.xml
 /etc/zones/SUNWdefault.xml
+/etc/zones/SUNWsolaris10.xml
 /etc/zones/SUNWtsoldef.xml
 /etc/zones/TRIBalien.xml
 /etc/zones/TRIBsparse.xml

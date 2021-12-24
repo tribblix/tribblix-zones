@@ -1,3 +1,9 @@
+/lib/amd64/libmpscsi_vhci.so
+/lib/amd64/libmpscsi_vhci.so.1
+/lib/libgrubmgmt.so
+/lib/libgrubmgmt.so.1
+/lib/libmpscsi_vhci.so
+/lib/libmpscsi_vhci.so.1
 /lib/svc/manifest/network/ibd-post-upgrade.xml
 /lib/svc/manifest/network/iscsi/iscsi-initiator.xml
 /lib/svc/manifest/network/iscsi/iscsi-target.xml
@@ -75,3 +81,4 @@
 /lib/svc/method/svc-tnd
 /lib/svc/method/svc-zones
 /lib/svc/method/svc-zonestat
+/lib/svc/seed/global.db
