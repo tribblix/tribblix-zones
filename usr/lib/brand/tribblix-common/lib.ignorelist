@@ -4,6 +4,7 @@
 /lib/libgrubmgmt.so.1
 /lib/libmpscsi_vhci.so
 /lib/libmpscsi_vhci.so.1
+/lib/svc/manifest/network/cdpd.xml
 /lib/svc/manifest/network/ibd-post-upgrade.xml
 /lib/svc/manifest/network/iscsi/iscsi-initiator.xml
 /lib/svc/manifest/network/iscsi/iscsi-target.xml
@@ -16,6 +17,7 @@
 /lib/svc/manifest/network/rpc/metamh.xml
 /lib/svc/manifest/network/tnctl.xml
 /lib/svc/manifest/network/tnd.xml
+/lib/svc/manifest/network/varpd.xml
 /lib/svc/manifest/platform/i86pc/acpihpd.xml
 /lib/svc/manifest/system/device/devices-fc-fabric.xml
 /lib/svc/manifest/system/dumpadm.xml
@@ -23,6 +25,7 @@
 /lib/svc/manifest/system/fcoe_target.xml
 /lib/svc/manifest/system/filesystem/rmvolmgr.xml
 /lib/svc/manifest/system/hal.xml
+/lib/svc/manifest/system/hyperv/kvp.xml
 /lib/svc/manifest/system/ibsrp/target.xml
 /lib/svc/manifest/system/intrd.xml
 /lib/svc/manifest/system/ipagent.xml
