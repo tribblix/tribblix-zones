@@ -39,7 +39,7 @@
 	<user_cmd>/usr/bin/getent passwd %u</user_cmd>
 
 	<install>/usr/lib/brand/whole-root/pkgcreatezone -z %z -R %R</install>
-	<installopts>o:O:h</installopts>
+	<installopts>o:O:p:P:h</installopts>
 	<boot></boot>
 	<sysboot>/usr/lib/brand/whole-root/prestate %z %R 2 0</sysboot>
 	<halt></halt>

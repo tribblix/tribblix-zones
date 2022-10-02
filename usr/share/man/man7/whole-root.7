@@ -1,4 +1,4 @@
-.TH "WHOLE-ROOT" "7" "April 18, 2022" "Tribblix"
+.TH "WHOLE-ROOT" "7" "October 2, 2022" "Tribblix"
 .SH "NAME"
 whole-root zone variant
 .SH DESCRIPTION
@@ -38,6 +38,28 @@ for example.
 .in +2
 .nf
 \fBzap create-zone ... -O\fR \fIdevelop-extras\fR \fB...\fR
+.fi
+.in -2
+.sp
+.LP
+To copy an individual package from the global zone to the new zone,
+use the -p flag with a package name or alias. This is only valid in
+conjunction with -o, as otherwise the whole global zone is copied
+anyway. For example.
+.sp
+.in +2
+.nf
+\fBzap create-zone ... -p\fR \fItcsh\fR \fB...\fR
+.fi
+.in -2
+.sp
+.LP
+To add an additional package to the new zone, use the -P flag,
+for example.
+.sp
+.in +2
+.nf
+\fBzap create-zone ... -P\fR \fItcsh\fR \fB...\fR
 .fi
 .in -2
 .sp

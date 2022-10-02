@@ -47,6 +47,8 @@ trap trap_cleanup INT
 
 copy_overlays=""
 add_overlays=""
+copy_packages=""
+add_packages=""
 ZONENAME=""
 ZONEPATH=""
 template_mode=0
@@ -57,11 +59,13 @@ export TEXTDOMAIN
 
 unset msg
 
-while getopts "ho:O:R:Tz:" opt; do
+while getopts "ho:O:p:P:R:Tz:" opt; do
 	case $opt in
 		h)	fail_usage "";;
 		o)	copy_overlays="$copy_overlays $OPTARG" ;;
 		O)	add_overlays="$add_overlays $OPTARG" ;;
+		p)	copy_packages="$copy_packages $OPTARG" ;;
+		P)	add_packages="$add_packages $OPTARG" ;;
 		R)	ZONEPATH="$OPTARG" ;;
 		T)	template_mode=1;;
 		z)	ZONENAME="$OPTARG" ;;
@@ -166,6 +170,24 @@ if [ -n "$copy_overlays" ]; then
 	    cat /var/sadm/overlays/${OVL}.pkgs >> ${TDIR}/plist
 	fi
     done
+    #
+    # if we've been asked to copy packages, add them here
+    # note that it makes no sense to copy packages unless we're copying
+    # overlays, so it's fine to be inside the surrounding if
+    #
+    # we also resolve aliases at this point
+    # there's a risky assumption here that all packages are in the TRIB
+    # namespace
+    #
+    for extra_pkg in $copy_packages
+    do
+	add_pkg=$(/usr/lib/zap/resolve-alias $extra_pkg)
+	case $add_pkg in
+	    TRIB*)
+		echo $add_pkg >> ${TDIR}/plist
+		;;
+	esac
+    done
     cat ${TDIR}/plist | sort -u > ${TDIR}/splist
     #
     # we need to select all the lines containing the selected package names
@@ -254,6 +276,16 @@ if [ -n "$add_overlays" ]; then
     for novl in $add_overlays
     do
 	/usr/bin/zap install-overlay -R ${ZONEROOT} $novl
+    done
+    pkgadm sync -R ${ZONEROOT} -q
+fi
+#
+# add additional packages
+#
+if [ -n "$add_packages" ]; then
+    for extra_pkg in $add_packages
+    do
+	/usr/bin/zap install -R ${ZONEROOT} $extra_pkg
     done
     pkgadm sync -R ${ZONEROOT} -q
 fi
