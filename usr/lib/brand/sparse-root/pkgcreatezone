@@ -88,11 +88,6 @@ if [ -x /usr/gnu/bin/grep ]; then
     EGREP="/usr/gnu/bin/grep -E"
     FGREP="/usr/gnu/bin/grep -F"
 fi
-if [ -x /usr/gnu/bin/amd64/grep ]; then
-    GREP=/usr/gnu/bin/amd64/grep
-    EGREP="/usr/gnu/bin/amd64/grep -E"
-    FGREP="/usr/gnu/bin/amd64/grep -F"
-fi
 
 #
 # Before installing the zone, set up ZFS dataset hierarchy for the zone root
