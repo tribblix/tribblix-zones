@@ -23,7 +23,7 @@
 #
 # Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013-2020 Peter C. Tribble peter.tribble@gmail.com
+# Copyright (c) 2013-2022 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -330,7 +330,7 @@ chown root:sys $repfile
 printf "$m_done\n"
 
 # ensure zap catalogs are present
-cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays $ZONEROOT/etc/zap/repositories
+cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays /etc/zap/repositories/*.filelist.bz2 $ZONEROOT/etc/zap/repositories
 
 #
 # run any postinstall scripts
