@@ -11,10 +11,6 @@
 /lib/svc/manifest/network/lms.xml
 /lib/svc/manifest/network/network-discovery.xml
 /lib/svc/manifest/network/npiv_config.xml
-/lib/svc/manifest/network/rpc/mdcomm.xml
-/lib/svc/manifest/network/rpc/meta.xml
-/lib/svc/manifest/network/rpc/metamed.xml
-/lib/svc/manifest/network/rpc/metamh.xml
 /lib/svc/manifest/network/tnctl.xml
 /lib/svc/manifest/network/tnd.xml
 /lib/svc/manifest/network/varpd.xml
@@ -30,9 +26,6 @@
 /lib/svc/manifest/system/intrd.xml
 /lib/svc/manifest/system/ipagent.xml
 /lib/svc/manifest/system/labeld.xml
-/lib/svc/manifest/system/mdmonitor.xml
-/lib/svc/manifest/system/metainit.xml
-/lib/svc/manifest/system/metasync.xml
 /lib/svc/manifest/system/ndmp.xml
 /lib/svc/manifest/system/nws_ii.xml
 /lib/svc/manifest/system/nws_rdc.xml

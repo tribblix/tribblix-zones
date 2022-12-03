@@ -32,8 +32,6 @@
 /etc/init.d/dodatadm.udaplt
 /etc/init.d/ii
 /etc/init.d/ii.cluster
-/etc/init.d/ncakmod
-/etc/init.d/ncalogd
 /etc/init.d/rdc
 /etc/init.d/rdc.cluster
 /etc/init.d/rdcfinish
@@ -45,18 +43,9 @@
 /etc/minor_perm
 /etc/name_to_major
 /etc/name_to_sysnum
-/etc/nca/nca.if
-/etc/nca/ncakmod.conf
-/etc/nca/ncalogd.conf
-/etc/nca/ncaport.conf
 /etc/path_to_inst
 /etc/power.conf
-/etc/rc0.d/K34ncalogd
-/etc/rc1.d/K34ncalogd
-/etc/rc2.d/S42ncakmod
 /etc/rc2.d/S81dodatadm.udaplt
-/etc/rc2.d/S94ncalogd
-/etc/rcS.d/K34ncalogd
 /etc/sdp.conf
 /etc/security/device_policy
 /etc/security/extra_privs
@@ -87,7 +76,6 @@
 /etc/sock2path.d/driver%2Fnetwork%2Frdsv3
 /etc/sock2path.d/driver%2Fnetwork%2Fsdp
 /etc/sock2path.d/system%2Fkernel
-/etc/sock2path.d/system%2Fnetwork%2Fhttp%2Fcache%2Faccelerator
 /etc/system
 /etc/usb/config_map.conf
 /etc/zones/SUNWblank.xml
