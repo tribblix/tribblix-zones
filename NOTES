@@ -37,9 +37,9 @@ file starting with the killed directories.
 
 For etc and var, either copy the global zone or the pspooled file. By
 only copying what the packaging system says is there, we should avoid
-copying crap. Then copy /var/sadm with a fixed up contents file.
+copying junk. Then copy /var/sadm with a fixed up contents file.
 
-Handling /lib gets nasty; it contains SMF manifests which we don't want
+Handling /lib is awkward; it contains SMF manifests which we don't want
 in a zone, so I've forced a copy under /zonelib/lib which we can edit
 (in the global zone).
 
@@ -64,47 +64,6 @@ including quite a few files under /usr.
 While sparse-root is the brand, you need a template. So that's what
 TRIBsparse.xml is - which goes into /etc/zones, and then you 'create
 -t TRIBsparse' in zonecfg.
-
-TODO:
-
-fix root as a role and jack
-
-ensure the initial BE has a valid UUID, because the uninstall checks
-for zone BEs that match the global zone's BE; if they're null the
-umount isn't called and you get an rm busy error, and the zone isn't
-uninstalled properly
-
-Solaris and OI have a makeuuid command; Tribblix skips it
-
-Could add TRIBsys-mgmt-product-registry so it's included. And need 2
-packages for whole and sparse-root zones
-
-So if I manually set
-
-zfs set org.opensolaris.libbe:uuid=51f2d0f4-df6e-6e48-dc0a-a74f37e14930 rpool/ROOT/tribblix
-
-Then 'beadm list -H' shows sensible output, and for a new zone zfs
-shows the right property on the zone filesystem
-
-# zfs get all|grep parent
-rpool/export/zones/pt2/ROOT/zbe  org.opensolaris.libbe:parentbe  51f2d0f4-df6e-6e48-dc0a-a74f37e14930  local
-
-and then zoneadm uninstall works correctly
-
-
-Cleanup done:
-
-Add my copyright
-Remove fmri_compare
-sparse-root:
-  pkgcreatezone: remove -a, -e, -d flags, as they aren't relevant
-    -p and -u only apply to p2v, so aren't relevant either
-    -s and -v are only passed to p2v, so they go as well
-  config.xml: clean up installopts
-  image_install: kill it completely, and p2v
-  clone: check sys-unconfig exists before use
-whole-root:
-  use -o for overlays not -e for extra packages
 
 Alien zones:
 
