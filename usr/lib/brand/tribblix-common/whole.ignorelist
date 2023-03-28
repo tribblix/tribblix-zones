@@ -131,6 +131,7 @@
 /usr/kernel/drv/ufmtest.conf
 /usr/kernel/drv/viona.conf
 /usr/kernel/drv/vmm.conf
+/usr/kernel/drv/vmm_drv_test.conf
 /usr/kernel/drv/winlock.conf
 /usr/kernel/dtrace/amd64/lx_systrace
 /usr/kernel/exec/amd64/javaexec
