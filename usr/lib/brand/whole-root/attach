@@ -23,6 +23,8 @@
 #
 # Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
 #
+# Copyright 2023 Peter C. Tribble peter.tribble@gmail.com
+#
 
 . /usr/lib/brand/tribblix-common/common.ksh
 
@@ -64,12 +66,7 @@ trap_cleanup() {
 
 # If the attach failed then clean up the ZFS datasets we created.
 trap_exit() {
-	if [[ $EXIT_CODE == $ZONE_SUBPROC_OK ]]; then
-		# unmount the zoneroot if labeled brand
-		is_brand_labeled
-		(( $? == 1 )) && ( umount $ZONEROOT || \
-		    log "$f_zfs_unmount" "$ZONEPATH/root" )
-	else
+	if [[ $EXIT_CODE != $ZONE_SUBPROC_OK ]]; then
 		if [[ "$install_media" != "-" ]]; then
 			/usr/lib/brand/whole-root/uninstall $ZONENAME $ZONEPATH -F
 		else

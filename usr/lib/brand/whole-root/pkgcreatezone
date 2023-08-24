@@ -23,7 +23,7 @@
 #
 # Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013-2022 Peter C. Tribble peter.tribble@gmail.com
+# Copyright (c) 2013-2023 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -82,9 +82,6 @@ fi
 # XXX shared/common script currently uses lower case zonename & zonepath
 zonename="$ZONENAME"
 zonepath="$ZONEPATH"
-
-is_brand_labeled
-brand_labeled=$?
 
 ZONEROOT=$ZONEPATH/root
 
@@ -385,12 +382,7 @@ print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/shadow
 chmod u-w $ZONEROOT/etc/shadow
 
 printf "$m_complete\n\n" ${SECONDS}
-if (( $brand_labeled == 0 )); then
-	printf "$m_postnote\n"
-	printf "$m_postnote2\n"
-else
-	# Umount the dataset on the root.
-	umount $ZONEROOT || printf "$f_zfs_unmount" "$ZONEPATH/root"
-fi
+printf "$m_postnote\n"
+printf "$m_postnote2\n"
 
 exit $ZONE_SUBPROC_OK

@@ -23,6 +23,8 @@
 #
 # Copyright (c) 2009, 2010, Oracle and/or its affiliates. All rights reserved.
 #
+# Copyright 2023 Peter C. Tribble peter.tribble@gmail.com
+#
 
 . /usr/lib/brand/tribblix-common/common.ksh
 
@@ -50,16 +52,9 @@ ALTROOT=$5
 
 # If we're not halting the zone, then just return.
 if [ $cmd -eq 4 ]; then
-	is_brand_labeled
-	if (( $? == 0 )); then
-		# Leave the active dataset mounted after halting (this might be
-		# a different dataset than what was mounted).
-		mount_active_ds
-	else
-		# Umount dataset on the root.
-		zoneroot="$ZONEPATH/root"
-		umount $zoneroot || printf "$f_zfs_unmount" "$zoneroot"
-	fi
+	# Leave the active dataset mounted after halting (this might be
+	# a different dataset than what was mounted).
+	mount_active_ds
 fi
 
 exit $ZONE_SUBPROC_OK

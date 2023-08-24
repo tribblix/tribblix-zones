@@ -23,6 +23,8 @@
 # Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
+# Copyright 2023 Peter C. Tribble peter.tribble@gmail.com
+#
 
 . /usr/lib/brand/tribblix-common/common.ksh
 
@@ -145,11 +147,9 @@ ZONE_IS_MOUNTED=0
 trap trap_exit EXIT
 
 #
-# Completion of unconfigure_zone will leave the zone root mounted for
-# ipkg brand zones.  The root won't be mounted for labeled brand zones.
+# Completion of unconfigure_zone will leave the zone root mounted.
 #
-is_brand_labeled
-(( $? == 0 )) && unconfigure_zone
+unconfigure_zone
 
 trap - EXIT
 exit $ZONE_SUBPROC_OK
