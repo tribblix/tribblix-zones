@@ -35,6 +35,7 @@
 /lib/svc/manifest/system/scheduler.xml
 /lib/svc/manifest/system/stmf.xml
 /lib/svc/manifest/system/sysevent.xml
+/lib/svc/manifest/system/update-man-index.xml
 /lib/svc/manifest/system/zones.xml
 /lib/svc/manifest/system/zonestat.xml
 /lib/svc/method/fc-fabric
@@ -66,4 +67,5 @@
 /lib/svc/method/svc-tnd
 /lib/svc/method/svc-zones
 /lib/svc/method/svc-zonestat
+/lib/svc/method/update-man-index
 /lib/svc/seed/global.db
