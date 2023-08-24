@@ -27,11 +27,6 @@
 /lib/svc/manifest/system/ipagent.xml
 /lib/svc/manifest/system/labeld.xml
 /lib/svc/manifest/system/ndmp.xml
-/lib/svc/manifest/system/nws_ii.xml
-/lib/svc/manifest/system/nws_rdc.xml
-/lib/svc/manifest/system/nws_rdcsyncd.xml
-/lib/svc/manifest/system/nws_scm.xml
-/lib/svc/manifest/system/nws_sv.xml
 /lib/svc/manifest/system/picl.xml
 /lib/svc/manifest/system/poold.xml
 /lib/svc/manifest/system/pools.xml
@@ -40,7 +35,6 @@
 /lib/svc/manifest/system/scheduler.xml
 /lib/svc/manifest/system/stmf.xml
 /lib/svc/manifest/system/sysevent.xml
-/lib/svc/manifest/system/wusb.xml
 /lib/svc/manifest/system/zones.xml
 /lib/svc/manifest/system/zonestat.xml
 /lib/svc/method/fc-fabric
@@ -54,7 +48,6 @@
 /lib/svc/method/svc-fcoei
 /lib/svc/method/svc-fcoet
 /lib/svc/method/svc-hal
-/lib/svc/method/svc-ii
 /lib/svc/method/svc-intrd
 /lib/svc/method/svc-ipagent
 /lib/svc/method/svc-labeld
@@ -63,15 +56,11 @@
 /lib/svc/method/svc-poold
 /lib/svc/method/svc-pools
 /lib/svc/method/svc-power
-/lib/svc/method/svc-rdc
-/lib/svc/method/svc-rdcsyncd
 /lib/svc/method/svc-resource-mgmt
 /lib/svc/method/svc-rmvolmgr
 /lib/svc/method/svc-scheduler
-/lib/svc/method/svc-scm
 /lib/svc/method/svc-srpt
 /lib/svc/method/svc-stmf
-/lib/svc/method/svc-sv
 /lib/svc/method/svc-syseventd
 /lib/svc/method/svc-tnctl
 /lib/svc/method/svc-tnd

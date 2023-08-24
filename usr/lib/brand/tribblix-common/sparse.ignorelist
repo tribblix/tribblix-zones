@@ -6,7 +6,6 @@
 /etc/devlink.tab
 /etc/driver_aliases
 /etc/driver_classes
-/etc/dscfg_format
 /etc/hal/fdi/information/10freedesktop/10-camera-ptp.fdi
 /etc/hal/fdi/information/10freedesktop/10-cd-dvd-burner.fdi
 /etc/hal/fdi/information/10freedesktop/10-usb-card-readers.fdi
@@ -30,14 +29,6 @@
 /etc/inet/ipqosconf.2.sample
 /etc/inet/ipqosconf.3.sample
 /etc/init.d/dodatadm.udaplt
-/etc/init.d/ii
-/etc/init.d/ii.cluster
-/etc/init.d/rdc
-/etc/init.d/rdc.cluster
-/etc/init.d/rdcfinish
-/etc/init.d/scm
-/etc/init.d/sv
-/etc/init.d/sv.cluster
 /etc/iu.ap
 /etc/mach
 /etc/minor_perm
