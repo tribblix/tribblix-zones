@@ -202,14 +202,6 @@ printf "$m_done\n"
 # ensure zap catalogs are present
 cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays /etc/zap/repositories/*.filelist.bz2 $ZONEROOT/etc/zap/repositories
 
-# Clean up root as a role and jack if needed
-/usr/bin/sed -i '/^root/s:;type=role::' $ZONEROOT/etc/user_attr
-print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/user_attr
-print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/passwd
-chmod u+w $ZONEROOT/etc/shadow
-print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/shadow
-chmod u-w $ZONEROOT/etc/shadow
-
 printf "$m_complete\n\n" ${SECONDS}
 printf "$m_postnote\n"
 printf "$m_postnote2\n"
