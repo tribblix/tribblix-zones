@@ -108,11 +108,11 @@ printf "$m_image\n" $ZONEROOT
 # before the files they contain, just like cpio wants
 #
 cd /
-${EGREP} '^/(etc|root|var)' /var/sadm/install/contents | nawk '{print $1}' | nawk -F= '{print $1}' | cpio -pdm $ZONEROOT
-find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
-mkdir -p $ZONEROOT/opt $ZONEROOT/usr $ZONEROOT/lib $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
+${EGREP} '^/(etc|root|var)' /var/sadm/install/contents | nawk '{print $1}' | nawk -F= '{print $1}' | cpio -pdmq $ZONEROOT
+mkdir -p $ZONEROOT/var/sadm/pkg
+find var/sadm/pkg/* var/sadm/overlays -name save -prune -o -print | cpio -pdmq $ZONEROOT
+mkdir -p $ZONEROOT/usr $ZONEROOT/lib $ZONEROOT/mnt $ZONEROOT/sbin $ZONEROOT/export
 mkdir -m 777 $ZONEROOT/tmp
-mkdir -p -m 700 $ZONEROOT/root
 ln -s ./usr/bin $ZONEROOT/bin
 
 #
@@ -123,18 +123,13 @@ ln -s ./usr/bin $ZONEROOT/bin
 find /var/sadm/pkg/*/save/pspool -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp "$1, DEST""s }' | sh -s
 
 #
-# copy in a cleaned up contents file
-#
-${EGREP} -v '^/(boot|kernel|devices|opt|platform)' /var/sadm/install/contents > $ZONEROOT/var/sadm/install/contents
-
-#
 # remove metadata for any installed packages that populate /opt
 #
 for opkg in `${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
 do
     rm -fr $ZONEROOT/var/sadm/pkg/$opkg
 done
-	   
+
 #
 # This is where the dragons live.
 # Unfortunately, /lib contains the SMF manifests (which is an unfortunate place
@@ -150,38 +145,32 @@ CFGZONELIB=$(LC_ALL=C zonecfg -z $ZONENAME info fs dir=/lib | grep special: | aw
 ZONELIBTOP=${CFGZONELIB%/*}
 ZONELIB="${ZONELIBTOP}/lib"
 if [ ! -d ${ZONELIBTOP}/lib/svc ]; then
-${GREP} '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm ${ZONELIBTOP}
+${GREP} '^/lib' /var/sadm/install/contents | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdmq ${ZONELIBTOP}
 #
 # remove ignored files
 #
-for fignore in `cat /usr/lib/brand/tribblix-common/lib.ignorelist`
-do
-    rm -f ${ZONELIBTOP}/${fignore}
-done
+rm -f $(awk -v DEST=$ZONELIBTOP '{print DEST"/"$1}' /usr/lib/brand/tribblix-common/lib.ignorelist)
 fi
 
 #
 # and remove any other files that should never exist in a zone
 #
-for fignore in `cat /usr/lib/brand/tribblix-common/sparse.ignorelist`
-do
-    rm -f ${ZONEROOT}/${fignore}
-done
+rm -f $(awk -v DEST=$ZONEROOT '{print DEST"/"$1}' /usr/lib/brand/tribblix-common/sparse.ignorelist)
 
 #
 # remove the desktop cache updates that we don't need in a read-only zone
 #
 rm -fr $ZONEROOT/var/svc/manifest/application/desktop-cache
-
+rm -fr $ZONEROOT/lib/svc/manifest/application/font
 #
-# clean the ignored entries from the contents file
+# copy in a cleaned up contents file
 #
 TBFILE=/tmp/il.${ZONENAME}.fg.$$
 cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common/sparse.ignorelist > $TBFILE
 echo "/var/svc/manifest/application/desktop-cache" >> $TBFILE
-mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
-cat $ZONEROOT/var/sadm/install/contents.raw | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
-rm -f $ZONEROOT/var/sadm/install/contents.raw $TBFILE
+echo "/var/svc/manifest/application/font" >> $TBFILE
+${EGREP} -v '^/(boot|kernel|devices|opt|platform)' /var/sadm/install/contents | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
+rm -f $TBFILE
 
 printf "$m_smf"
 PROFILEDIR=etc/svc/profile

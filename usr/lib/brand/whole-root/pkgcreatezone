@@ -204,33 +204,33 @@ fi
 # before the files they contain, just like cpio wants
 #
 cd /
-${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdm $ZONEROOT
+${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdmq $ZONEROOT
 # for /usr, cut is much quicker
-${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdm $ZONEROOT
+${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdmq $ZONEROOT
 
 #
 # copy packaging metadata
 #
 if [ -n "$copy_overlays" ]; then
-    /usr/bin/find var/sadm/overlays -print -depth | cpio -pdm $ZONEROOT
+    /usr/bin/find var/sadm/overlays -print | cpio -pdmq $ZONEROOT
     mkdir -p $ZONEROOT/var/sadm/overlays/installed
     cd $ZONEROOT/var/sadm/overlays/installed
     rm *
     touch `cat ${TDIR}/solist`
     cd /var/sadm/pkg
     mkdir -p $ZONEROOT/var/sadm/pkg
-    /usr/bin/find `cat ${TDIR}/splist` -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT/var/sadm/pkg
+    /usr/bin/find `cat ${TDIR}/splist` -name save -prune -o -print | cpio -pdmq $ZONEROOT/var/sadm/pkg
     cd /
 else
-    /usr/bin/find var/sadm/pkg var/sadm/overlays -print -depth | grep -v save/pspool | cpio -pdm $ZONEROOT
+    mkdir -p $ZONEROOT/var/sadm/pkg
+    /usr/bin/find var/sadm/pkg/* var/sadm/overlays -name save -prune -o -print | cpio -pdmq $ZONEROOT
 fi
 
 #
 # create standard locations
 #
-mkdir -p $ZONEROOT/mnt $ZONEROOT/opt $ZONEROOT/export
+mkdir -p $ZONEROOT/mnt $ZONEROOT/export
 mkdir -m 777 $ZONEROOT/tmp
-mkdir -p -m 700 $ZONEROOT/root
 ln -s ./usr/bin $ZONEROOT/bin
 
 #
@@ -307,10 +307,7 @@ cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common
 #
 # delete the files from the zone or template
 #
-for fignore in `cat $TBFILE`
-do
-    rm -f ${ZONEROOT}/${fignore}
-done
+rm -f $(awk -v DEST=$ZONEROOT '{print DEST"/"$1}' ${TBFILE})
 
 #
 # TODO: clean up empty directories that leaves behind
