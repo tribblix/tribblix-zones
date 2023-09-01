@@ -147,9 +147,9 @@ ZONE_IS_MOUNTED=0
 trap trap_exit EXIT
 
 #
-# Completion of unconfigure_zone will leave the zone root mounted.
+# remove zone identity, as much as possible
 #
-unconfigure_zone
+unconfigure_tribblix_zone
 
 trap - EXIT
 exit $ZONE_SUBPROC_OK

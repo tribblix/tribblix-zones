@@ -22,7 +22,7 @@
 #
 # Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013, 2015 Peter C. Tribble peter.tribble@gmail.com
+# Copyright 2013-2023 Peter C. Tribble peter.tribble@gmail.com
 #
 
 unset LD_LIBRARY_PATH
@@ -45,8 +45,8 @@ f_zfs_mount=$(gettext "Unable to mount the zone's ZFS dataset.")
 
 m_brnd_usage=$(gettext "brand-specific usage: ")
 
-v_unconfig=$(gettext "Performing zone sys-unconfig")
-e_unconfig=$(gettext "sys-unconfig failed")
+v_unconfig=$(gettext "Unconfiguring the zone")
+e_unconfig=$(gettext "zone unconfiguration failed")
 v_mounting=$(gettext "Mounting the zone")
 e_badmount=$(gettext "Zone mount failed")
 v_unmount=$(gettext "Unmounting zone")
@@ -245,7 +245,8 @@ create_active_ds() {
 }
 
 #
-# Run sys-unconfig on the zone.
+# Run sys-unconfig on the zone. This is the legacy version, not suitable
+# for the majority of modern zones.
 #
 unconfigure_zone() {
 	vlog "$v_unconfig"
@@ -255,6 +256,30 @@ unconfigure_zone() {
 	zoneadm -z $ZONENAME mount -f || fatal "$e_badmount"
 
 	zlogin -S $ZONENAME /usr/sbin/sys-unconfig -R /a \
+	    </dev/null >/dev/null 2>&1
+	if (( $? != 0 )); then
+		error "$e_unconfig"
+		failed=1
+	fi
+
+	vlog "$v_unmount"
+	zoneadm -z $ZONENAME unmount || fatal "$e_badunmount"
+	ZONE_IS_MOUNTED=0
+
+	[[ -n $failed ]] && fatal "$e_exitfail"
+}
+
+#
+# Unconfigure a zone, using the zap tooling
+#
+unconfigure_tribblix_zone() {
+	vlog "$v_unconfig"
+
+	vlog "$v_mounting"
+	ZONE_IS_MOUNTED=1
+	zoneadm -z $ZONENAME mount -f || fatal "$e_badmount"
+
+	zlogin -S $ZONENAME /usr/bin/zap unconfigure \
 	    </dev/null >/dev/null 2>&1
 	if (( $? != 0 )); then
 		error "$e_unconfig"
