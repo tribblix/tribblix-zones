@@ -9,7 +9,7 @@ end
 
 So we need to replace pkgcreatezone:
 
-cat /var/sadm/install/contents | nawk '{print $1}' | nawk -F/ '{print $2}' | uniq -c
+cat /var/sadm/install/contents | awk '{print $1}' | awk -F/ '{print $2}' | uniq -c
 
 bin        - create symlink
 boot 	   - kill

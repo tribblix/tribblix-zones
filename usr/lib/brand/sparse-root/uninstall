@@ -116,7 +116,7 @@ fi
 #
 
 # get_current_gzbe
-CURRENT_GZBE=`/sbin/beadm list -H | /bin/nawk -F\; '{
+CURRENT_GZBE=`/sbin/beadm list -H | /bin/awk -F\; '{
 	# Field 3 is the BE status.  'N' is the active BE.
 	if ($3 ~ "N")
 		# Field 2 is the BE UUID

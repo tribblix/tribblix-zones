@@ -93,7 +93,7 @@ get_current_gzbe() {
 	# then find the boot environment where the alternate root is mounted.
 	#
 	if [ -x /usr/sbin/beadm ]; then
-		CURRENT_GZBE=`/usr/sbin/beadm list -H | /usr/bin/nawk \
+		CURRENT_GZBE=`/usr/sbin/beadm list -H | /usr/bin/awk \
 				-v alt=$ALTROOT -F\; '{
 			if (length(alt) == 0) {
 			    # Field 3 is the BE status.  'N' is the active BE.
@@ -125,7 +125,7 @@ get_current_gzbe() {
 get_active_ds() {
 	ACTIVE_DS=`/usr/sbin/zfs list -H -r -t filesystem \
 	    -o name,$PROP_PARENT,$PROP_ACTIVE $2/ROOT | \
-	    /usr/bin/nawk -v gzbe=$1 ' {
+	    /usr/bin/awk -v gzbe=$1 ' {
 		if ($1 ~ /ROOT\/[^\/]+$/ && $2 == gzbe && $3 == "on") {
 			print $1
 			if (found == 1)

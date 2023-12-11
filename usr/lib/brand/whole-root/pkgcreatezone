@@ -204,7 +204,7 @@ fi
 # before the files they contain, just like cpio wants
 #
 cd /
-${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | nawk '{print $1}' | sed -e 's:=: :' -e 's:/::' | nawk '{print $1}' | cpio -pdmq $ZONEROOT
+${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | awk '{print $1}' | sed -e 's:=: :' -e 's:/::' | awk '{print $1}' | cpio -pdmq $ZONEROOT
 # for /usr, cut is much quicker
 ${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdmq $ZONEROOT
 
@@ -240,9 +240,9 @@ ln -s ./usr/bin $ZONEROOT/bin
 #
 cd /var/sadm/pkg
 if [ -n "$copy_overlays" ]; then
-    find `cat ${TDIR}/splist` -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
+    find `cat ${TDIR}/splist` -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | awk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
 else
-    find * -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | nawk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
+    find * -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | awk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
 fi
 cd /
 

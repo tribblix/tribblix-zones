@@ -197,7 +197,7 @@ if [[ "$install_media" == "-" ]]; then
 	# not attached yet, the 'install_media == -' means the dataset must be
 	# mounted at this point.
 	#
-	ACTIVE_DS=`mount -p | nawk -v zroot=$ZONEROOT '{
+	ACTIVE_DS=`mount -p | awk -v zroot=$ZONEROOT '{
 	    if ($3 == zroot && $4 == "zfs")
 		    print $1
 	}'`
@@ -242,7 +242,7 @@ if [[ "$install_media" == "-" ]]; then
 	zfs inherit zoned $ACTIVE_DS
 	(( $? != 0 )) && fatal "$f_ds_config" $ACTIVE_DS "'inherit zoned'"
 
-	mounted_ds=`mount -p | nawk -v zroot=$ZONEROOT '{
+	mounted_ds=`mount -p | awk -v zroot=$ZONEROOT '{
 	    if ($3 == zroot && $4 == "zfs")
 		    print $1
 	}'`
