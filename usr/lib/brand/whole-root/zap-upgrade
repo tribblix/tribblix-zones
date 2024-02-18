@@ -1,0 +1,173 @@
+#!/bin/sh
+#
+# upgrade a whole-root zone, not yet supported
+#
+# called with the following flags
+#
+# -R - alternate root
+# -b - brand
+# -z - zone name
+# -p - zone path (the path in the old global zone)
+# -v - new Tribblix version
+#
+MYBRAND="whole-root"
+ALTROOT=""
+ZBRAND=""
+ZNAME=""
+ZPATH=""
+NVER=""
+
+usage() {
+    echo "Usage: $0 -R altroot -b brand -z zone_name -p zone_path -v version"
+}
+
+bail() {
+    usage
+    echo "ERROR: $1"
+    exit 1
+}
+
+while getopts "R:b:p:v:z:" opt; do
+case $opt in
+R)
+    ALTROOT="$OPTARG"
+    ;;
+b)
+    ZBRAND="$OPTARG"
+    ;;
+p)
+    ZPATH="$OPTARG"
+    ;;
+v)
+    NVER="$OPTARG"
+    ;;
+z)
+    ZNAME="$OPTARG"
+    ;;
+*)
+    bail "Invalid argument $opt"
+    ;;
+esac
+done
+shift $((OPTIND - 1))
+
+#
+# there should be no more arguments
+#
+if [ $# -gt 0 ]; then
+    bail "Extra arguments"
+fi
+
+#
+# all arguments must have been supplied
+#
+if [ -z "${ALTROOT}" ]; then
+    bail "alternate root must be supplied"
+fi
+if [ -z "${ZBRAND}" ]; then
+    bail "brand must be supplied"
+fi
+if [ -z "${ZPATH}" ]; then
+    bail "zone path must be supplied"
+fi
+if [ -z "${ZNAME}" ]; then
+    bail "zone name must be supplied"
+fi
+if [ -z "${NVER}" ]; then
+    bail "new version must be supplied"
+fi
+
+#
+# validate arguments
+#
+# alternate root must be an absolute path, must not be /,
+# must be the root of a Tribblix image
+#
+# the version check later proves it's not equivalent to /
+#
+case $ALTROOT in
+    "/")
+	bail "alternate root cannot be /"
+	;;
+    /*)
+	:
+	;;
+    *)
+	bail "alternate root must be an absolute path"
+	;;
+esac
+if [ ! -d "${ALTROOT}" ]; then
+    bail "alternate root must exist"
+fi
+if [ ! -f "${ALTROOT}/etc/release" ]; then
+    bail "alternate root must be a Tribblix image"
+fi
+if [ ! -f "${ALTROOT}/etc/zap/version.current" ]; then
+    bail "alternate root must be a Tribblix image"
+fi
+#
+# the brand must be the same as this script's brand
+#
+if [ "${ZBRAND}" != "${MYBRAND}" ]; then
+    bail "incorrect brand, must be ${MYBRAND}"
+fi
+#
+# current zone properties
+#
+/usr/sbin/zoneadm -z ${ZNAME} list -p | awk -F: '{print $4, $6}' | read nzpath nzbrand
+#
+# the zone path must be the zone path for this zone
+#
+if [ "${ZPATH}" != "${nzpath}" ]; then
+    bail "incorrect zone path for zone ${ZNAME}"
+fi
+#
+# the named zone must be of this brand
+#
+if [ "${ZBRAND}" != "${nzbrand}" ]; then
+    bail "incorrect brand, ${ZNAME} is ${nzbrand}"
+fi
+#
+# the new version must match that of the alternate root
+# the new version must not be the same as the current root
+# the zone must have the same version as the current global zone
+#
+if [ ! -f /etc/zap/version.current ]; then
+    bail "unable to detect current version"
+fi
+ogver=$(</etc/zap/version.current)
+if [ ! -f ${ALTROOT}/etc/zap/version.current ]; then
+    bail "unable to detect upgrade version"
+fi
+ngver=$(<${ZPATH}/etc/zap/version.current)
+if [ ! -f ${ZPATH}/etc/zap/version.current ]; then
+    bail "unable to detect zone current version"
+fi
+ozver=$(<${ALTROOT}/${ZPATH}/etc/zap/version.current)
+if [ ! -f ${ALTROOT}/${ZPATH}/etc/zap/version.current ]; then
+    bail "unable to detect zone upgrade version"
+fi
+nzver=$(<${ALTROOT}/${ZPATH}/etc/zap/version.current)
+if [ "${NVER}" != "${ngver}" ]; then
+    bail "requested version doesn't match"
+fi
+if [ "${ogver}" = "${ngver}" ]; then
+    bail "version hasn't been upgraded"
+fi
+if [ "${ozver}" != "${ogver}" ]; then
+    bail "zone version doesn't match global zone"
+fi
+# the new zone version should be the same as the old
+# as it hasn't been upgraded yet
+if [ "${ozver}" != "${nzver}" ]; then
+    bail "cloned zone version doesn't match original"
+fi
+
+#
+# now do the upgrade
+#
+
+#
+# this is currently unimplemented
+#
+exit 1
