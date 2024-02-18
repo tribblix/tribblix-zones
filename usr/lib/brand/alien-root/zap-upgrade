@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+# No actions are (yet) necessary to upgrade alien zones
+#
+exit 0
