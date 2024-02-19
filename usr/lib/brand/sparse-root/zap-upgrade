@@ -146,6 +146,49 @@ if [ "${ogver}" = "${ngver}" ]; then
     bail "version hasn't been upgraded"
 fi
 
+#
+# check for whether this zone is built on a template
+#
+ZTEMPLATE=""
+TEMPLATEPATH=""
+TEMPLATESTYLE=""
+if [ -x ${ALTROOT}/usr/lib/zap/list-zone-templates ]; then
+    ${ALTROOT}/usr/lib/zap/list-zone-templates -p | awk -F: '{print $1, $2, $3}' | while read ztname ztpath ztzname
+    do
+	if [ "X${ZNAME}" = "X${ztzname}" ]; then
+	    ZTEMPLATE="${ztname}"
+	    TEMPLATEPATH="${ztpath}"
+	    if [ ! -f ${TEMPLATEPATH}/etc/zap/version.current ]; then
+		TEMPLATESTYLE="alien"
+		#
+		# this is the easy one, this is a non-Tribblix template
+		# so must be alien, and we don't touch it (for now)
+		#
+		exit 0
+	    fi
+	    otver=$(<${TEMPLATEPATH}/etc/zap/version.current)
+	    #
+	    # we have a Tribblix template, if it's the same version as the
+	    # global zone then it's a whole template, if not then it's
+	    # an alien version of Tribblix
+	    #
+	    if [ "${otver}" != "${ogver}" ]; then
+		TEMPLATESTYLE="alien"
+		#
+		# also easy, this is an alien Tribblix template
+		# and we don't touch it (for now)
+		#
+		exit 0
+	    fi
+	    #
+	    # if we're still here then it's a whole Tribblix template
+	    # that matches the old global zone, so we need to handle it
+	    #
+	    TEMPLATESTYLE="whole"
+	fi
+    done
+fi
+
 # the zone must have the same version as the current global zone
 if [ ! -f ${ZPATH}/etc/zap/version.current ]; then
     bail "unable to detect zone current version"
