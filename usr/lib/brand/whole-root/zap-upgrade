@@ -130,7 +130,6 @@ fi
 #
 # the new version must match that of the alternate root
 # the new version must not be the same as the current root
-# the zone must have the same version as the current global zone
 #
 if [ ! -f /etc/zap/version.current ]; then
     bail "unable to detect current version"
@@ -139,21 +138,23 @@ ogver=$(</etc/zap/version.current)
 if [ ! -f ${ALTROOT}/etc/zap/version.current ]; then
     bail "unable to detect upgrade version"
 fi
-ngver=$(<${ZPATH}/etc/zap/version.current)
-if [ ! -f ${ZPATH}/etc/zap/version.current ]; then
-    bail "unable to detect zone current version"
-fi
-ozver=$(<${ALTROOT}/${ZPATH}/etc/zap/version.current)
-if [ ! -f ${ALTROOT}/${ZPATH}/etc/zap/version.current ]; then
-    bail "unable to detect zone upgrade version"
-fi
-nzver=$(<${ALTROOT}/${ZPATH}/etc/zap/version.current)
+ngver=$(<${ALTROOT}/etc/zap/version.current)
 if [ "${NVER}" != "${ngver}" ]; then
     bail "requested version doesn't match"
 fi
 if [ "${ogver}" = "${ngver}" ]; then
     bail "version hasn't been upgraded"
 fi
+
+# the zone must have the same version as the current global zone
+if [ ! -f ${ZPATH}/etc/zap/version.current ]; then
+    bail "unable to detect zone current version"
+fi
+ozver=$(<${ZPATH}/etc/zap/version.current)
+if [ ! -f ${ALTROOT}/${ZPATH}/etc/zap/version.current ]; then
+    bail "unable to detect zone upgrade version"
+fi
+nzver=$(<${ALTROOT}/${ZPATH}/etc/zap/version.current)
 if [ "${ozver}" != "${ogver}" ]; then
     bail "zone version doesn't match global zone"
 fi
