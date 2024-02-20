@@ -168,7 +168,7 @@ rm -fr $ZONEROOT/lib/svc/manifest/application/font
 TBFILE=/tmp/il.${ZONENAME}.fg.$$
 cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common/sparse.ignorelist > $TBFILE
 echo "/var/svc/manifest/application/desktop-cache" >> $TBFILE
-echo "/var/svc/manifest/application/font" >> $TBFILE
+echo "/lib/svc/manifest/application/font" >> $TBFILE
 ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' /var/sadm/install/contents | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
 rm -f $TBFILE
 
