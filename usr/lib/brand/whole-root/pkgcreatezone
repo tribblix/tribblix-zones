@@ -327,6 +327,9 @@ if [ -n "$copy_overlays" ]; then
     rm -fr $TDIR
 fi
 
+# ensure zap catalogs are present
+cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays /etc/zap/repositories/*.filelist.bz2 $ZONEROOT/etc/zap/repositories
+
 #
 # if a template, we're done
 #
@@ -349,9 +352,6 @@ chmod 0600 $repfile
 chown root:sys $repfile
 
 printf "$m_done\n"
-
-# ensure zap catalogs are present
-cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays /etc/zap/repositories/*.filelist.bz2 $ZONEROOT/etc/zap/repositories
 
 #
 # run any postinstall scripts
