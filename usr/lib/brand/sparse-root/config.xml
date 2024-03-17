@@ -39,7 +39,7 @@
 	<user_cmd>/usr/bin/getent passwd %u</user_cmd>
 
 	<install>/usr/lib/brand/sparse-root/pkgcreatezone -z %z -R %R</install>
-	<installopts>h</installopts>
+	<installopts>T:h</installopts>
 	<boot></boot>
 	<sysboot>/usr/lib/brand/sparse-root/prestate %z %R 2 0</sysboot>
 	<halt></halt>
