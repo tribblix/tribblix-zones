@@ -27,6 +27,11 @@ usage() {
 	exit 2
 }
 
+bail() {
+    echo "ERROR: $1"
+    exit 1
+}
+
 case $1 in
 -d)
 	shift
@@ -58,29 +63,25 @@ fi
 # check files exist
 #
 if [ ! -r "$ISOFILE" ]; then
-   echo "ERROR: missing input tarball"
-   exit 1
+   bail "missing input tarball"
 fi
 case $DESTDIR in
 /*)
 if [ ! -d "$DESTDIR" ]; then
-   echo "ERROR: destination does not exist"
-   exit 1
+   bail "destination does not exist"
 fi
 ;;
 *)
-echo "ERROR: destination must be an absolute path"
-exit 1
+bail "destination must be an absolute path"
 ;;
 esac
 
 #
 # the destination must exist, and it must be empty
 #
-NF=`/bin/ls -1A $DESTDIR`
+NF=$(/bin/ls -1A "$DESTDIR")
 if [ -n "$NF" ]; then
-   echo "ERROR: destination must be empty"
-   exit 1
+   bail "destination must be empty"
 fi
 
 #
@@ -88,5 +89,5 @@ fi
 # use gtar to ensure absolute paths and anything with .. get dropped,
 # so we can't unpack the file outside the zone root
 #
-cd $DESTDIR
-/usr/bin/gtar xf $ISOFILE
+cd "$DESTDIR" || bail "internal cd error"
+/usr/bin/gtar xf "$ISOFILE"

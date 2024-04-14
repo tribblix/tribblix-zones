@@ -27,6 +27,11 @@ usage() {
 	exit 2
 }
 
+bail() {
+    echo "ERROR: $1"
+    exit 1
+}
+
 case $1 in
 -d)
 	shift
@@ -58,39 +63,34 @@ fi
 # check files exist
 #
 if [ ! -r "$ISOFILE" ]; then
-   echo "ERROR: missing input file"
-   exit 1
+   bail "missing input file"
 fi
 case $DESTDIR in
 /*)
 if [ ! -d "$DESTDIR" ]; then
-   echo "ERROR: destination does not exist"
-   exit 1
+   bail "destination does not exist"
 fi
 ;;
 *)
-echo "ERROR: destination must be an absolute path"
-exit 1
+bail "destination must be an absolute path"
 ;;
 esac
 
 #
 # the destination must exist, and it must be empty
 #
-NF=`/bin/ls -1A $DESTDIR`
+NF=$(/bin/ls -1A "$DESTDIR")
 if [ -n "$NF" ]; then
-   echo "ERROR: destination must be empty"
-   exit 1
+   bail "destination must be empty"
 fi
 
 #
 # the destination must be a zfs dataset, because we're going to send a
 # zfs stream at it
 #
-MYDSET=`/usr/sbin/zfs list -H $DESTDIR 2>/dev/null | awk '{print $1}'`
+MYDSET=$(/usr/sbin/zfs list -H "$DESTDIR" 2>/dev/null | awk '{print $1}')
 if [ -z "$MYDSET" ]; then
-    echo "ERROR: zone root must be a zfs dataset"
-    exit 1
+    bail "zone root must be a zfs dataset"
 fi
 #
 # and it must be its own dataset mounted at the zone root
@@ -98,15 +98,13 @@ fi
 # so we end up parsing df and verifying that the location is in fact
 # a mount point
 #
-MYDSET2=`/usr/bin/df -k $DESTDIR | grep / | awk '{print $1}'`
-MYDSETMP=`/usr/bin/df -k $DESTDIR | grep / | awk '{print $NF}'`
+MYDSET2=$(/usr/bin/df -k "$DESTDIR" | grep / | awk '{print $1}')
+MYDSETMP=$(/usr/bin/df -k "$DESTDIR" | grep / | awk '{print $NF}')
 if [ "$MYDSET" != "$MYDSET2" ]; then
-    echo "ERROR: zfs dataset mismatch"
-    exit 1
+    bail "zfs dataset mismatch"
 fi
 if [ "$MYDSETMP" != "$DESTDIR" ]; then
-    echo "ERROR: zone root must be a separate zfs dataset"
-    exit 1
+    bail "zone root must be a separate zfs dataset"
 fi
 
 GZCAT="/usr/bin/gzcat"
@@ -121,19 +119,18 @@ fi
 #
 case $ISOFILE in
     *.zfs)
-	cat $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	cat "$ISOFILE" | /usr/sbin/zfs recv -F "$MYDSET"
 	;;
     *.zfs.gz)
-	${GZCAT} $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	${GZCAT} "$ISOFILE" | /usr/sbin/zfs recv -F "$MYDSET"
 	;;
     *.zfs.bz2)
-	${BZCAT} $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	${BZCAT} "$ISOFILE" | /usr/sbin/zfs recv -F "$MYDSET"
 	;;
     *.zfs.xz)
-	${XZCAT} -d -c $ISOFILE | /usr/sbin/zfs recv -F $MYDSET
+	${XZCAT} -d -c "$ISOFILE" | /usr/sbin/zfs recv -F "$MYDSET"
 	;;
     *)
-	echo "Unrecognized file format $ISOFILE"
-	exit 1
+	bail "Unrecognized file format $ISOFILE"
 	;;
 esac

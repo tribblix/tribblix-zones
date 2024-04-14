@@ -27,24 +27,29 @@ usage() {
 	exit 2
 }
 
+bail() {
+    echo "ERROR: $1"
+    exit 1
+}
+
 #
 # the boot or root archive is a compressed ufs file system
 #
 unpack_archive() {
 AFILE=$1
-if [ -f $AFILE ]; then
-  cp $AFILE ${TMPWRK}/tt1.gz
+if [ -f "$AFILE" ]; then
+  cp "$AFILE" ${TMPWRK}/tt1.gz
   gunzip ${TMPWRK}/tt1.gz
-  AFDEV=`/usr/sbin/lofiadm -a ${TMPWRK}/tt1`
+  AFDEV=$(/usr/sbin/lofiadm -a ${TMPWRK}/tt1)
   AFMNT=/mnt.arch.$$
   mkdir $AFMNT
-  /usr/sbin/mount -Fufs -o ro $AFDEV $AFMNT
-  cd $AFMNT
-  /usr/bin/find * -print -depth | cpio -pdm ${DESTDIR}
+  /usr/sbin/mount -Fufs -o ro "$AFDEV" $AFMNT
+  cd $AFMNT || bail "internal cd error unpacking archive"
+  /usr/bin/find * -print -depth | cpio -pdm "${DESTDIR}"
   cd /
-  /usr/sbin/umount $AFMNT
-  /usr/sbin/lofiadm -d $AFDEV
-  rmdir $AFMNT
+  /usr/sbin/umount "$AFMNT"
+  /usr/sbin/lofiadm -d "$AFDEV"
+  rmdir "$AFMNT"
   rm ${TMPWRK}/tt1
 fi
 }
@@ -55,18 +60,18 @@ fi
 #
 unpack_solaris_zlib() {
 AFILE=$1
-if [ -f $AFILE ]; then
-  AFDEV=`/usr/sbin/lofiadm -a ${AFILE}`
+if [ -f "$AFILE" ]; then
+  AFDEV=$(/usr/sbin/lofiadm -a "${AFILE}")
   AFMNT=/mnt.arch.$$
   mkdir $AFMNT
-  /usr/sbin/mount -Fhsfs -o ro $AFDEV $AFMNT
-  cd $AFMNT
-  mkdir -p ${DESTDIR}/usr
-  /usr/bin/find * -print -depth | cpio -pdm ${DESTDIR}/usr
+  /usr/sbin/mount -Fhsfs -o ro "$AFDEV" $AFMNT
+  cd $AFMNT || bail "internal cd error in solaris.zlib"
+  mkdir -p "${DESTDIR}/usr"
+  /usr/bin/find * -print -depth | cpio -pdm "${DESTDIR}/usr"
   cd /
-  /usr/sbin/umount $AFMNT
-  /usr/sbin/lofiadm -d $AFDEV
-  rmdir $AFMNT
+  /usr/sbin/umount "$AFMNT"
+  /usr/sbin/lofiadm -d "$AFDEV"
+  rmdir "$AFMNT"
 fi
 }
 
@@ -78,36 +83,36 @@ fi
 #
 unpack_solarismisc_zlib() {
 AFILE=$1
-if [ -f $AFILE ]; then
-  AFDEV=`/usr/sbin/lofiadm -a ${AFILE}`
+if [ -f "$AFILE" ]; then
+  AFDEV=$(/usr/sbin/lofiadm -a "${AFILE}")
   AFMNT=/mnt.arch.$$
   mkdir $AFMNT
-  /usr/sbin/mount -Fhsfs -o ro $AFDEV $AFMNT
-  cd $AFMNT
+  /usr/sbin/mount -Fhsfs -o ro "$AFDEV" $AFMNT
+  cd $AFMNT || bail "internal cd error in solarismisc.zlib"
   if [ -d opt ]; then
-    rm -f ${DESTDIR}/opt
-    if [ ! -d ${DESTDIR}/opt ]; then
-      /usr/bin/find opt -print -depth | cpio -pdm ${DESTDIR}
+    rm -f "${DESTDIR}/opt"
+    if [ ! -d "${DESTDIR}/opt" ]; then
+      /usr/bin/find opt -print -depth | cpio -pdm "${DESTDIR}"
     fi
   fi
   if [ -d etc ]; then
-    for targlink in `/usr/bin/find etc -xdev -type f`
+    for targlink in $(/usr/bin/find etc -xdev -type f)
     do
-      rm -f ${DESTDIR}/${targlink}
+      rm -f "${DESTDIR}/${targlink}"
     done
-    /usr/bin/find etc -print -depth | cpio -pdm ${DESTDIR}
+    /usr/bin/find etc -print -depth | cpio -pdm "${DESTDIR}"
   fi
   if [ -d var ]; then
-    for targlink in `/usr/bin/find var -xdev -type f`
+    for targlink in $(/usr/bin/find var -xdev -type f)
     do
-      rm -f ${DESTDIR}/${targlink}
+      rm -f "${DESTDIR}/${targlink}"
     done
-    /usr/bin/find var -print -depth | cpio -pdm ${DESTDIR}
+    /usr/bin/find var -print -depth | cpio -pdm "${DESTDIR}"
   fi
   cd /
-  /usr/sbin/umount $AFMNT
-  /usr/sbin/lofiadm -d $AFDEV
-  rmdir $AFMNT
+  /usr/sbin/umount "$AFMNT"
+  /usr/sbin/lofiadm -d "$AFDEV"
+  rmdir "$AFMNT"
 fi
 }
 
@@ -143,38 +148,34 @@ fi
 # check files exist
 #
 if [ ! -r "$ISOFILE" ]; then
-   echo "ERROR: missing input iso image"
-   exit 1
+   bail "missing input iso image"
 fi
 case $DESTDIR in
 /*)
 if [ ! -d "$DESTDIR" ]; then
-   echo "ERROR: destination does not exist"
-   exit 1
+   bail "destination does not exist"
 fi
 ;;
 *)
-echo "ERROR: destination must be an absolute path"
-exit 1
+bail "destination must be an absolute path"
 ;;
 esac
 
 #
 # the destination must exist, and it must be empty
 #
-NF=`/bin/ls -1A $DESTDIR`
+NF=$(/bin/ls -1A "$DESTDIR")
 if [ -n "$NF" ]; then
-   echo "ERROR: destination must be empty"
-   exit 1
+   bail "destination must be empty"
 fi
 
 #
 # mount up the image
 #
-LOFIDEV=`/usr/sbin/lofiadm -a $ISOFILE`
+LOFIDEV=$(/usr/sbin/lofiadm -a "$ISOFILE")
 LOFIMNT=/mnt.$$
 mkdir -p $LOFIMNT
-/usr/sbin/mount -F hsfs -o ro $LOFIDEV $LOFIMNT
+/usr/sbin/mount -F hsfs -o ro "$LOFIDEV" $LOFIMNT
 
 TMPWRK=/tmp/.live-iso.$$
 mkdir -p $TMPWRK
@@ -205,7 +206,7 @@ unpack_solaris_zlib ${LOFIMNT}/usr.img.zlib
 cd /
 /usr/sbin/umount $LOFIMNT
 rmdir $LOFIMNT
-/usr/sbin/lofiadm -d $LOFIDEV
+/usr/sbin/lofiadm -d "$LOFIDEV"
 rm -fr $TMPWRK
 
 #
@@ -227,17 +228,17 @@ for PUBLISHER in omnios sonicle.com openindiana.org
 do
     for RPKGNAME in system%2Finstall%2Ftext-install system%2Finstall%2Fmedia%2Finternal system%2Finstall%2Fconfiguration system%2Finstall%2Fgui-install%2Flocale system%2Finstall%2Fgui-install
     do
-	if [ -d ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME} ]; then
-	    for dfile in `grep '^file ' ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}/* | /bin/tr ' ' '\n' | grep '^path=' | sed s:path=::`
+	if [ -d "${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}" ]; then
+	    for dfile in $(grep '^file ' "${DESTDIR}"/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}/* | /bin/tr ' ' '\n' | grep '^path=' | sed s:path=::)
 	    do
-		/bin/rm -f ${DESTDIR}/${dfile}
+		/bin/rm -f "${DESTDIR}/${dfile}"
 	    done
-	    for ddir in `grep '^dir ' ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}/* | /bin/tr ' ' '\n' | grep '^path=' | sed s:path=:: | sort -r`
+	    for ddir in $(grep '^dir ' "${DESTDIR}"/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}/* | /bin/tr ' ' '\n' | grep '^path=' | sed s:path=:: | sort -r)
 	    do
-		/bin/rmdir ${DESTDIR}/$ddir
+		/bin/rmdir "${DESTDIR}/$ddir"
 	    done
 	fi
-	/bin/rm -fr ${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}
+	/bin/rm -fr "${DESTDIR}/var/pkg/publisher/${PUBLISHER}/pkg/${RPKGNAME}"
     done
 done
 
@@ -246,35 +247,35 @@ done
 # this leaves you with base-iso, you probably want to install
 # base and base-extras
 #
-if [ -f ${DESTDIR}/var/sadm/pkg/TRIBsys-install-media-internal/pkginfo ]; then
-    /usr/bin/zap uninstall -R ${DESTDIR} TRIBsys-install-media-internal
-    pkgadm sync -R ${DESTDIR} -q
+if [ -f "${DESTDIR}/var/sadm/pkg/TRIBsys-install-media-internal/pkginfo" ]; then
+    /usr/bin/zap uninstall -R "${DESTDIR}" TRIBsys-install-media-internal
+    pkgadm sync -R "${DESTDIR}" -q
 fi
 
 #
 # Needed for OpenIndiana, this might end up being a directory with almost
 # nothing in it instead of the correct symlink
 #
-if [ -d ${DESTDIR}/usr/lib/64 ]; then
-    rm -f ${DESTDIR}/usr/lib/64/libncurses*
-    rmdir ${DESTDIR}/usr/lib/64
-    ln -s amd64 ${DESTDIR}/usr/lib/64
+if [ -d "${DESTDIR}/usr/lib/64" ]; then
+    rm -f "${DESTDIR}"/usr/lib/64/libncurses*
+    rmdir "${DESTDIR}/usr/lib/64"
+    ln -s amd64 "${DESTDIR}/usr/lib/64"
 fi
 
 #
 # for zones, we don't have /kernel /boot /devices
 #
-/usr/bin/rm -fr ${DESTDIR}/kernel
-/usr/bin/rm -fr ${DESTDIR}/boot
-/usr/bin/rm -fr ${DESTDIR}/devices
+/usr/bin/rm -fr "${DESTDIR}/kernel"
+/usr/bin/rm -fr "${DESTDIR}/boot"
+/usr/bin/rm -fr "${DESTDIR}/devices"
 
 #
 # replace live smf repository
 #
-/usr/bin/rm ${DESTDIR}/etc/svc/repository.db
-/usr/bin/cp -p ${DESTDIR}/lib/svc/seed/global.db ${DESTDIR}/etc/svc/repository.db
+/usr/bin/rm "${DESTDIR}/etc/svc/repository.db"
+/usr/bin/cp -p "${DESTDIR}/lib/svc/seed/global.db" "${DESTDIR}/etc/svc/repository.db"
 #
 # reset the SMF profile from the live image to regular
 #
-/usr/bin/rm -f ${DESTDIR}/etc/svc/profile/generic.xml
-/usr/bin/ln -s generic_limited_net.xml ${DESTDIR}/etc/svc/profile/generic.xml
+/usr/bin/rm -f "${DESTDIR}/etc/svc/profile/generic.xml"
+/usr/bin/ln -s generic_limited_net.xml "${DESTDIR}/etc/svc/profile/generic.xml"
