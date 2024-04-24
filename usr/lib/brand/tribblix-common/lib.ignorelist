@@ -5,6 +5,7 @@
 /lib/libmpscsi_vhci.so
 /lib/libmpscsi_vhci.so.1
 /lib/svc/manifest/network/cdpd.xml
+/lib/svc/manifest/network/chrony.xml 
 /lib/svc/manifest/network/ibd-post-upgrade.xml
 /lib/svc/manifest/network/iscsi/iscsi-initiator.xml
 /lib/svc/manifest/network/iscsi/iscsi-target.xml
