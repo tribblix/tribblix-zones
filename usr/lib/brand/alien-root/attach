@@ -1,5 +1,7 @@
 #!/bin/ksh -p
 #
+# SPDX-License-Identifier: CDDL-1.0
+#
 # CDDL HEADER START
 #
 # The contents of this file are subject to the terms of the
@@ -23,7 +25,7 @@
 #
 # Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright 2023 Peter C. Tribble peter.tribble@gmail.com
+# Copyright 2024 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -51,6 +53,34 @@ no_installing=$(gettext "                Installing: Using pre-existing data in 
 f_update=$(gettext "Could not update attaching zone")
 f_ds_config=$(gettext  "Failed to configure dataset %s: could not set %s.")
 f_no_active_ds_mounted=$(gettext  "Failed to locate any dataset mounted at %s.  Attach requires a mounted dataset.")
+
+f_sanity_detail=$(gettext  "Missing %s at %s")
+sanity_ok=$(gettext "  Consistency Check: Passed.  Looks like an alien image.")
+sanity_fail=$(gettext "  Consistency Check: FAILED (see log for details).")
+#
+# check the image provided looks appropriate
+#
+sanity_check()
+{
+	typeset dir="$1"
+	res=0
+
+	# minimal checks as this might be a strange or mvi image
+	checks="sbin lib/libsocket.so.1 usr/bin/ls"
+	for x in $checks; do
+		if [[ ! -e $dir/$x ]]; then
+			log "$f_sanity_detail" "$x" "$dir"
+			res=1
+		fi
+	done
+
+	if (( $res != 0 )); then
+		log "$sanity_fail"
+		fatal "***Installation failed***" "$ZONENAME"
+	fi
+
+	vlog "$sanity_ok"
+}
 
 # Clean up on interrupt
 trap_cleanup() {
