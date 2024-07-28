@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+# SPDX-License-Identifier: CDDL-1.0
+#
 # {{{ CDDL HEADER
 #
 # This file and its contents are supplied under the terms of the
@@ -249,7 +251,7 @@ done
 #
 if [ -f "${DESTDIR}/var/sadm/pkg/TRIBsys-install-media-internal/pkginfo" ]; then
     /usr/bin/zap uninstall -R "${DESTDIR}" TRIBsys-install-media-internal
-    pkgadm sync -R "${DESTDIR}" -q
+    /usr/bin/pkgadm sync -R "${DESTDIR}" -q
 fi
 
 #

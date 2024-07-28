@@ -1,5 +1,7 @@
 #!/bin/ksh -p
 #
+# SPDX-License-Identifier: CDDL-1.0
+#
 # CDDL HEADER START
 #
 # The contents of this file are subject to the terms of the
@@ -23,7 +25,7 @@
 #
 # Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013-2023 Peter C. Tribble peter.tribble@gmail.com
+# Copyright (c) 2013-2024 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -93,19 +95,19 @@ if (( $template_mode == 0 )); then
   create_active_ds
 else
     ZONEROOT=$ZONEPATH
-    if [ ! -d $ZONEROOT ]; then
+    if [ ! -d "$ZONEROOT" ]; then
 	echo "$ZONEROOT should already exist"
 	exit $ZONE_SUBPROC_USAGE
     fi
 fi
 
-printf "$m_image\n" $ZONEROOT
+printf "$m_image\n" "$ZONEROOT"
 
 #
 # this is where we do all the work
 #  unpack the image
 #
-if [ ! -f $iso_image ]; then
+if [ ! -f "$iso_image" ]; then
     echo "Cannot find $iso_image"
     exit $ZONE_SUBPROC_USAGE
 fi
@@ -115,19 +117,19 @@ fi
 #
 case $iso_image in
     *.iso)
-	/usr/lib/brand/alien-root/live-iso-unpack -d $ZONEROOT $iso_image
+	/usr/lib/brand/alien-root/live-iso-unpack -d "$ZONEROOT" "$iso_image"
 	if [ $? -ne 0 ]; then
 	    exit $ZONE_SUBPROC_NOTCOMPLETE
 	fi
 	;;
     *.tar|*.tar.*)
-	/usr/lib/brand/alien-root/mvi-unpack -d $ZONEROOT $iso_image
+	/usr/lib/brand/alien-root/mvi-unpack -d "$ZONEROOT" "$iso_image"
 	if [ $? -ne 0 ]; then
 	    exit $ZONE_SUBPROC_NOTCOMPLETE
 	fi
 	;;
     *.zfs|*.zfs.*)
-	/usr/lib/brand/alien-root/zfs-unpack -d $ZONEROOT $iso_image
+	/usr/lib/brand/alien-root/zfs-unpack -d "$ZONEROOT" "$iso_image"
 	if [ $? -ne 0 ]; then
 	    exit $ZONE_SUBPROC_NOTCOMPLETE
 	fi
@@ -144,7 +146,7 @@ esac
 #
 for fignore in `cat /usr/lib/brand/tribblix-common/lib.ignorelist`
 do
-    rm -f ${ZONEROOT}/${fignore}
+    rm -f "${ZONEROOT}/${fignore}"
 done
 
 #
@@ -152,7 +154,7 @@ done
 #
 for fignore in `cat /usr/lib/brand/tribblix-common/sparse.ignorelist`
 do
-    rm -f ${ZONEROOT}/${fignore}
+    rm -f "${ZONEROOT}/${fignore}"
 done
 
 #
@@ -167,50 +169,50 @@ fi
 # installation
 #
 PROFILEDIR=etc/svc/profile
-if [ -d  $ZONEROOT/$PROFILEDIR ]; then
+if [ -d  "$ZONEROOT/$PROFILEDIR" ]; then
     printf "$m_smf"
-    rm -f $ZONEROOT/$PROFILEDIR/name_service.xml
-    rm -f $ZONEROOT/$PROFILEDIR/generic.xml
-    rm -f $ZONEROOT/$PROFILEDIR/inetd_services.xml
-    rm -f $ZONEROOT/$PROFILEDIR/platform.xml
-    ln -s ns_files.xml $ZONEROOT/$PROFILEDIR/name_service.xml
-    ln -s generic_limited_net.xml $ZONEROOT/$PROFILEDIR/generic.xml
-    ln -s inetd_generic.xml $ZONEROOT/$PROFILEDIR/inetd_services.xml
-    ln -s platform_none.xml $ZONEROOT/$PROFILEDIR/platform.xml
+    rm -f "$ZONEROOT/$PROFILEDIR/name_service.xml"
+    rm -f "$ZONEROOT/$PROFILEDIR/generic.xml"
+    rm -f "$ZONEROOT/$PROFILEDIR/inetd_services.xml"
+    rm -f "$ZONEROOT/$PROFILEDIR/platform.xml"
+    ln -s ns_files.xml "$ZONEROOT/$PROFILEDIR/name_service.xml"
+    ln -s generic_limited_net.xml "$ZONEROOT/$PROFILEDIR/generic.xml"
+    ln -s inetd_generic.xml "$ZONEROOT/$PROFILEDIR/inetd_services.xml"
+    ln -s platform_none.xml "$ZONEROOT/$PROFILEDIR/platform.xml"
 
     # This was formerly done in i.manifest
     repfile=$ZONEROOT/etc/svc/repository.db
-    cp /lib/svc/seed/nonglobal.db $repfile
-    chmod 0600 $repfile
-    chown root:sys $repfile
+    cp /lib/svc/seed/nonglobal.db "$repfile"
+    chmod 0600 "$repfile"
+    chown root:sys "$repfile"
 
     printf "$m_done\n"
 fi
 
 # Clean up root as a role and jack if needed
-/usr/bin/sed -i '/^root/s:;type=role::'  $ZONEROOT/etc/user_attr
-print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/user_attr
-print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/passwd
-chmod u+w $ZONEROOT/etc/shadow
-print "/^jack:/d\nw" | ed -s $ZONEROOT/etc/shadow
-chmod u-w $ZONEROOT/etc/shadow
+/usr/bin/sed -i '/^root/s:;type=role::'  "$ZONEROOT/etc/user_attr"
+print "/^jack:/d\nw" | ed -s "$ZONEROOT/etc/user_attr"
+print "/^jack:/d\nw" | ed -s "$ZONEROOT/etc/passwd"
+chmod u+w "$ZONEROOT/etc/shadow"
+print "/^jack:/d\nw" | ed -s "$ZONEROOT/etc/shadow"
+chmod u-w "$ZONEROOT/etc/shadow"
 
 #
 # if root has no password set, set it to a blank one
 # Note: a blank password is not the same as a blank field in shadow
 # this taken from Kayak
 #
-chmod u+w $ZONEROOT/etc/shadow
+chmod u+w "$ZONEROOT/etc/shadow"
 ROOTPW='$5$kr1VgdIt$OUiUAyZCDogH/uaxH71rMeQxvpDEY2yX.x0ZQRnmeb9'
-sed -i -e 's%^root::%root:'$ROOTPW':%' $ZONEROOT/etc/shadow
-chmod u-w $ZONEROOT/etc/shadow
+sed -i -e 's%^root::%root:'$ROOTPW':%' "$ZONEROOT/etc/shadow"
+chmod u-w "$ZONEROOT/etc/shadow"
 
 #
 # configure nsswitch.conf to match the global zone, as not all distros
 # ship with sensible defaults
 #
-if [ -f $ZONEROOT/etc/nsswitch.conf ]; then
-    cp /etc/nsswitch.conf $ZONEROOT/etc/nsswitch.conf
+if [ -f "$ZONEROOT/etc/nsswitch.conf" ]; then
+    cp /etc/nsswitch.conf "$ZONEROOT/etc/nsswitch.conf"
 fi
 
 #
@@ -218,8 +220,8 @@ fi
 # to a non-global zone. This may be unsuccessful, but there's no harm
 # in trying.
 #
-if [ -x $ZONEROOT/usr/bin/pkg ]; then
-    chroot $ZONEROOT /usr/bin/pkg change-variant variant.opensolaris.zone=nonglobal 2>/dev/null
+if [ -x "$ZONEROOT/usr/bin/pkg" ]; then
+    chroot "$ZONEROOT" /usr/bin/pkg change-variant variant.opensolaris.zone=nonglobal 2>/dev/null
 fi
 
 printf "$m_complete\n\n" ${SECONDS}

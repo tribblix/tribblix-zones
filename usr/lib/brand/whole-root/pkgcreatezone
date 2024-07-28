@@ -1,5 +1,7 @@
 #!/bin/ksh -p
 #
+# SPDX-License-Identifier: CDDL-1.0
+#
 # CDDL HEADER START
 #
 # The contents of this file are subject to the terms of the
@@ -23,7 +25,7 @@
 #
 # Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright (c) 2013-2023 Peter C. Tribble peter.tribble@gmail.com
+# Copyright (c) 2013-2024 Peter C. Tribble peter.tribble@gmail.com
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -107,7 +109,7 @@ if (( $template_mode == 0 )); then
   create_active_ds
 else
     ZONEROOT=$ZONEPATH
-    if [ ! -d $ZONEROOT ]; then
+    if [ ! -d "$ZONEROOT" ]; then
 	echo "$ZONEROOT should already exist"
 	exit $ZONE_SUBPROC_USAGE
     fi
@@ -163,8 +165,8 @@ if [ -n "$copy_overlays" ]; then
     cat ${TDIR}/olist | sort -u > ${TDIR}/solist
     for OVL in `cat ${TDIR}/solist`
     do
-	if [ -f /var/sadm/overlays/${OVL}.pkgs ]; then
-	    cat /var/sadm/overlays/${OVL}.pkgs >> ${TDIR}/plist
+	if [ -f "/var/sadm/overlays/${OVL}.pkgs" ]; then
+	    cat "/var/sadm/overlays/${OVL}.pkgs" >> ${TDIR}/plist
 	fi
     done
     #
@@ -204,34 +206,34 @@ fi
 # before the files they contain, just like cpio wants
 #
 cd /
-${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | awk '{print $1}' | sed -e 's:=: :' -e 's:/::' | awk '{print $1}' | cpio -pdmq $ZONEROOT
+${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | awk '{print $1}' | sed -e 's:=: :' -e 's:/::' | awk '{print $1}' | cpio -pdmq "$ZONEROOT"
 # for /usr, cut is much quicker
-${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdmq $ZONEROOT
+${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdmq "$ZONEROOT"
 
 #
 # copy packaging metadata
 #
 if [ -n "$copy_overlays" ]; then
-    /usr/bin/find var/sadm/overlays -print | cpio -pdmq $ZONEROOT
+    /usr/bin/find var/sadm/overlays -print | cpio -pdmq "$ZONEROOT"
     mkdir -p $ZONEROOT/var/sadm/overlays/installed
     cd $ZONEROOT/var/sadm/overlays/installed
     rm *
     touch `cat ${TDIR}/solist`
     cd /var/sadm/pkg
-    mkdir -p $ZONEROOT/var/sadm/pkg
-    /usr/bin/find `cat ${TDIR}/splist` -name save -prune -o -print | cpio -pdmq $ZONEROOT/var/sadm/pkg
+    mkdir -p "$ZONEROOT/var/sadm/pkg"
+    /usr/bin/find `cat ${TDIR}/splist` -name save -prune -o -print | cpio -pdmq "$ZONEROOT/var/sadm/pkg"
     cd /
 else
-    mkdir -p $ZONEROOT/var/sadm/pkg
-    /usr/bin/find var/sadm/pkg/* var/sadm/overlays -name save -prune -o -print | cpio -pdmq $ZONEROOT
+    mkdir -p "$ZONEROOT/var/sadm/pkg"
+    /usr/bin/find var/sadm/pkg/* var/sadm/overlays -name save -prune -o -print | cpio -pdmq "$ZONEROOT"
 fi
 
 #
 # create standard locations
 #
-mkdir -p $ZONEROOT/mnt $ZONEROOT/export
-mkdir -m 777 $ZONEROOT/tmp
-ln -s ./usr/bin $ZONEROOT/bin
+mkdir -p "$ZONEROOT/mnt" "$ZONEROOT/export"
+mkdir -m 777 "$ZONEROOT/tmp"
+ln -s ./usr/bin "$ZONEROOT/bin"
 
 #
 # use the saved pspool files, if we have them
@@ -263,7 +265,7 @@ fi
 #
 for opkg in `${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
 do
-    rm -fr $ZONEROOT/var/sadm/pkg/$opkg
+    rm -fr "$ZONEROOT/var/sadm/pkg/$opkg"
 done
 
 #
@@ -272,9 +274,9 @@ done
 if [ -n "$add_overlays" ]; then
     for novl in $add_overlays
     do
-	/usr/bin/zap install-overlay -R ${ZONEROOT} $novl
+	/usr/bin/zap install-overlay -R "${ZONEROOT}" "$novl"
     done
-    pkgadm sync -R ${ZONEROOT} -q
+    /usr/bin/pkgadm sync -R "${ZONEROOT}" -q
 fi
 #
 # add additional packages
@@ -282,9 +284,9 @@ fi
 if [ -n "$add_packages" ]; then
     for extra_pkg in $add_packages
     do
-	/usr/bin/zap install -R ${ZONEROOT} $extra_pkg
+	/usr/bin/zap install -R "${ZONEROOT}" "$extra_pkg"
     done
-    pkgadm sync -R ${ZONEROOT} -q
+    /usr/bin/pkgadm sync -R "${ZONEROOT}" -q
 fi
 
 #
@@ -302,12 +304,12 @@ fi
 # create a combined ignorelist
 #
 TBFILE=/tmp/il.${ZONENAME}.fg.$$
-cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common/sparse.ignorelist /usr/lib/brand/tribblix-common/whole.ignorelist > $TBFILE
+cat /usr/lib/brand/tribblix-common/lib.ignorelist /usr/lib/brand/tribblix-common/sparse.ignorelist /usr/lib/brand/tribblix-common/whole.ignorelist > "$TBFILE"
 
 #
 # delete the files from the zone or template
 #
-rm -f $(awk -v DEST=$ZONEROOT '{print DEST"/"$1}' ${TBFILE})
+rm -f $(awk -v DEST="$ZONEROOT" '{print DEST"/"$1}' "${TBFILE}")
 
 #
 # TODO: clean up empty directories that leaves behind
@@ -316,19 +318,19 @@ rm -f $(awk -v DEST=$ZONEROOT '{print DEST"/"$1}' ${TBFILE})
 #
 # clean the ignored entries from the contents file
 #
-mv $ZONEROOT/var/sadm/install/contents $ZONEROOT/var/sadm/install/contents.raw
-cat $ZONEROOT/var/sadm/install/contents.raw | ${FGREP} -v -f $TBFILE > $ZONEROOT/var/sadm/install/contents
-rm -f $ZONEROOT/var/sadm/install/contents.raw $TBFILE
+mv "$ZONEROOT/var/sadm/install/contents" "$ZONEROOT/var/sadm/install/contents.raw"
+cat "$ZONEROOT/var/sadm/install/contents.raw" | ${FGREP} -v -f "$TBFILE" > "$ZONEROOT/var/sadm/install/contents"
+rm -f "$ZONEROOT/var/sadm/install/contents.raw" "$TBFILE"
 
 #
 # remove our temporary work area
 #
 if [ -n "$copy_overlays" ]; then
-    rm -fr $TDIR
+    rm -fr "$TDIR"
 fi
 
 # ensure zap catalogs are present
-cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays /etc/zap/repositories/*.filelist.bz2 $ZONEROOT/etc/zap/repositories
+cp -p /etc/zap/repositories/*.catalog /etc/zap/repositories/*.aliases /etc/zap/repositories/*.overlays /etc/zap/repositories/*.filelist.bz2 "$ZONEROOT/etc/zap/repositories"
 
 #
 # if a template, we're done
@@ -339,17 +341,17 @@ fi
 
 printf "$m_smf"
 PROFILEDIR=etc/svc/profile
-rm -f $ZONEROOT/$PROFILEDIR/name_service.xml $ZONEROOT/$PROFILEDIR/generic.xml $ZONEROOT/$PROFILEDIR/inetd_services.xml $ZONEROOT/$PROFILEDIR/platform.xml
-ln -s ns_files.xml $ZONEROOT/$PROFILEDIR/name_service.xml
-ln -s generic_limited_net.xml $ZONEROOT/$PROFILEDIR/generic.xml
-ln -s inetd_generic.xml $ZONEROOT/$PROFILEDIR/inetd_services.xml
-ln -s platform_none.xml $ZONEROOT/$PROFILEDIR/platform.xml
+rm -f "$ZONEROOT/$PROFILEDIR/name_service.xml" "$ZONEROOT/$PROFILEDIR/generic.xml" "$ZONEROOT/$PROFILEDIR/inetd_services.xml" "$ZONEROOT/$PROFILEDIR/platform.xml"
+ln -s ns_files.xml "$ZONEROOT/$PROFILEDIR/name_service.xml"
+ln -s generic_limited_net.xml "$ZONEROOT/$PROFILEDIR/generic.xml"
+ln -s inetd_generic.xml "$ZONEROOT/$PROFILEDIR/inetd_services.xml"
+ln -s platform_none.xml "$ZONEROOT/$PROFILEDIR/platform.xml"
 
 # This was formerly done in i.manifest
 repfile=$ZONEROOT/etc/svc/repository.db
-cp /lib/svc/seed/nonglobal.db $repfile
-chmod 0600 $repfile
-chown root:sys $repfile
+cp /lib/svc/seed/nonglobal.db "$repfile"
+chmod 0600 "$repfile"
+chown root:sys "$repfile"
 
 printf "$m_done\n"
 
