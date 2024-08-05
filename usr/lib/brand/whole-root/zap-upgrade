@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+# SPDX-License-Identifier: CDDL-1.0
+#
 # {{{ CDDL HEADER
 #
 # This file and its contents are supplied under the terms of the
@@ -123,7 +125,7 @@ if [ ! -f "${ALTROOT}/etc/zap/version.current" ]; then
     bail "alternate root must be a Tribblix image"
 fi
 #
-# the brand must be the same as this script's brand
+# the zone's brand must be the same as this script's brand
 #
 if [ "${ZBRAND}" != "${MYBRAND}" ]; then
     bail "incorrect brand, must be ${MYBRAND}"
@@ -131,7 +133,7 @@ fi
 #
 # current zone properties
 #
-/usr/sbin/zoneadm -z ${ZNAME} list -p | awk -F: '{print $4, $6}' | read nzpath nzbrand
+/usr/sbin/zoneadm -z "${ZNAME}" list -p | awk -F: '{print $4, $6}' | read -r nzpath nzbrand
 #
 # the zone path must be the zone path for this zone
 #
@@ -145,17 +147,17 @@ if [ "${ZBRAND}" != "${nzbrand}" ]; then
     bail "incorrect brand, ${ZNAME} is ${nzbrand}"
 fi
 #
-# the new version must match that of the alternate root
+# the new version must match that of the global zone in the alternate root
 # the new version must not be the same as the current root
 #
 if [ ! -f /etc/zap/version.current ]; then
     bail "unable to detect current version"
 fi
 ogver=$(</etc/zap/version.current)
-if [ ! -f ${ALTROOT}/etc/zap/version.current ]; then
+if [ ! -f "${ALTROOT}/etc/zap/version.current" ]; then
     bail "unable to detect upgrade version"
 fi
-ngver=$(<${ALTROOT}/etc/zap/version.current)
+ngver=$(<"${ALTROOT}/etc/zap/version.current")
 if [ "${NVER}" != "${ngver}" ]; then
     bail "requested version doesn't match"
 fi
@@ -164,14 +166,14 @@ if [ "${ogver}" = "${ngver}" ]; then
 fi
 
 # the zone must have the same version as the current global zone
-if [ ! -f ${ZPATH}/etc/zap/version.current ]; then
+if [ ! -f "${ZPATH}/etc/zap/version.current" ]; then
     bail "unable to detect zone current version"
 fi
-ozver=$(<${ZPATH}/etc/zap/version.current)
-if [ ! -f ${ALTROOT}/${ZPATH}/etc/zap/version.current ]; then
+ozver=$(<"${ZPATH}/etc/zap/version.current")
+if [ ! -f "${ALTROOT}/${ZPATH}/etc/zap/version.current" ]; then
     bail "unable to detect zone upgrade version"
 fi
-nzver=$(<${ALTROOT}/${ZPATH}/etc/zap/version.current)
+nzver=$(<"${ALTROOT}/${ZPATH}/etc/zap/version.current")
 if [ "${ozver}" != "${ogver}" ]; then
     bail "zone version doesn't match global zone"
 fi
