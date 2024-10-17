@@ -34,6 +34,7 @@
 /lib/svc/manifest/system/power.xml
 /lib/svc/manifest/system/resource-mgmt.xml
 /lib/svc/manifest/system/scheduler.xml
+/lib/svc/manifest/system/slim.xml
 /lib/svc/manifest/system/stmf.xml
 /lib/svc/manifest/system/sysevent.xml
 /lib/svc/manifest/system/update-man-index.xml
