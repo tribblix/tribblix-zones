@@ -144,7 +144,7 @@ esac
 # Unfortunately, /lib contains the SMF manifests (which is an unfortunate
 # place for them), so we must delete the manifests that aren't valid in a zone
 #
-for fignore in `cat /usr/lib/brand/tribblix-common/lib.ignorelist`
+for fignore in $(cat /usr/lib/brand/tribblix-common/lib.ignorelist)
 do
     rm -f "${ZONEROOT}/${fignore}"
 done
@@ -152,7 +152,7 @@ done
 #
 # and remove any other files that should never exist in a zone
 #
-for fignore in `cat /usr/lib/brand/tribblix-common/sparse.ignorelist`
+for fignore in $(cat /usr/lib/brand/tribblix-common/sparse.ignorelist)
 do
     rm -f "${ZONEROOT}/${fignore}"
 done

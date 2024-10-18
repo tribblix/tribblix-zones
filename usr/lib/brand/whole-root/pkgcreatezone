@@ -115,7 +115,7 @@ else
     fi
 fi
 
-printf "$m_image\n" $ZONEROOT
+printf "$m_image\n" "$ZONEROOT"
 
 #
 # this is where we do all the work
@@ -125,12 +125,12 @@ printf "$m_image\n" $ZONEROOT
 overlay_list_deps() {
     MYOVL=$1
     OVL=/var/sadm/overlays/${MYOVL}.ovl
-    if [ -f ${OVL} ]; then
-	echo $MYOVL
-	for novl in `/usr/bin/awk -F= '{if ($1=="REQUIRES") print $2}' ${OVL}`
+    if [ -f "${OVL}" ]; then
+	echo "$MYOVL"
+	for novl in $(/usr/bin/awk -F= '{if ($1=="REQUIRES") print $2}' ${OVL})
 	do
-	    echo $novl
-	    overlay_list_deps $novl
+	    echo "$novl"
+	    overlay_list_deps "$novl"
 	done
     fi
 }
@@ -154,19 +154,19 @@ overlay_list_deps() {
 CONTENTS_SOURCE="/var/sadm/install/contents"
 if [ -n "$copy_overlays" ]; then
     echo "Configuring overlays: $copy_overlays"
-    TDIR=/tmp/.zinstall-`date | digest -a md5`.$$
-    mkdir $TDIR
-    touch $TDIR/olist $TDIR/plist
-    echo "base" >> ${TDIR}/olist
+    TDIR=/tmp/.zinstall-$(date | digest -a md5).$$
+    mkdir "$TDIR"
+    touch "$TDIR/olist" "$TDIR/plist"
+    echo "base" >> "${TDIR}/olist"
     for OVL in $copy_overlays
     do
-	overlay_list_deps $OVL >> ${TDIR}/olist
+	overlay_list_deps "$OVL" >> "${TDIR}/olist"
     done
-    cat ${TDIR}/olist | sort -u > ${TDIR}/solist
-    for OVL in `cat ${TDIR}/solist`
+    cat "${TDIR}/olist" | sort -u > "${TDIR}/solist"
+    for OVL in $(cat ${TDIR}/solist)
     do
 	if [ -f "/var/sadm/overlays/${OVL}.pkgs" ]; then
-	    cat "/var/sadm/overlays/${OVL}.pkgs" >> ${TDIR}/plist
+	    cat "/var/sadm/overlays/${OVL}.pkgs" >> "${TDIR}/plist"
 	fi
     done
     #
@@ -180,25 +180,25 @@ if [ -n "$copy_overlays" ]; then
     #
     for extra_pkg in $copy_packages
     do
-	add_pkg=$(/usr/lib/zap/resolve-alias $extra_pkg)
+	add_pkg=$(/usr/lib/zap/resolve-alias "$extra_pkg")
 	case $add_pkg in
 	    TRIB*)
-		echo $add_pkg >> ${TDIR}/plist
+		echo "$add_pkg" >> "${TDIR}/plist"
 		;;
 	esac
     done
-    cat ${TDIR}/plist | sort -u > ${TDIR}/splist
+    cat "${TDIR}/plist" | sort -u > "${TDIR}/splist"
     #
     # we need to select all the lines containing the selected package names
     # we can't use grep -w because the hyphen in package names is a word
     # boundary causing some lines to be matched in error, so explicitly
     # look for the package name surrounded by space
     #
-    cat ${TDIR}/splist | awk '{print "( |^)"$1"( |$)"}' > ${TDIR}/splist2
-    /usr/gnu/bin/grep -E -f ${TDIR}/splist2 ${CONTENTS_SOURCE} > ${TDIR}/contents
+    cat "${TDIR}/splist" | awk '{print "( |^)"$1"( |$)"}' > "${TDIR}/splist2"
+    /usr/gnu/bin/grep -E -f "${TDIR}/splist2" "${CONTENTS_SOURCE}" > "${TDIR}/contents"
     CONTENTS_SOURCE=${TDIR}/contents
     cd /var/sadm/pkg
-    /bin/ls -1U | fgrep -xv -f ${TDIR}/splist > ${TDIR}/xplist
+    /bin/ls -1U | fgrep -xv -f "${TDIR}/splist" > "${TDIR}/xplist"
 fi
 
 #
@@ -206,22 +206,22 @@ fi
 # before the files they contain, just like cpio wants
 #
 cd /
-${EGREP} '^/(etc|root|var|sbin|lib)' $CONTENTS_SOURCE | awk '{print $1}' | sed -e 's:=: :' -e 's:/::' | awk '{print $1}' | cpio -pdmq "$ZONEROOT"
+${EGREP} '^/(etc|root|var|sbin|lib)' "$CONTENTS_SOURCE" | awk '{print $1}' | sed -e 's:=: :' -e 's:/::' | awk '{print $1}' | cpio -pdmq "$ZONEROOT"
 # for /usr, cut is much quicker
-${GREP} '^/usr' $CONTENTS_SOURCE | cut -f1 -d' ' | cut -f1 -d= | cpio -pdmq "$ZONEROOT"
+${GREP} '^/usr' "$CONTENTS_SOURCE" | cut -f1 -d' ' | cut -f1 -d= | cpio -pdmq "$ZONEROOT"
 
 #
 # copy packaging metadata
 #
 if [ -n "$copy_overlays" ]; then
     /usr/bin/find var/sadm/overlays -print | cpio -pdmq "$ZONEROOT"
-    mkdir -p $ZONEROOT/var/sadm/overlays/installed
-    cd $ZONEROOT/var/sadm/overlays/installed
+    mkdir -p "$ZONEROOT/var/sadm/overlays/installed"
+    cd "$ZONEROOT/var/sadm/overlays/installed"
     rm *
-    touch `cat ${TDIR}/solist`
+    touch $(cat ${TDIR}/solist)
     cd /var/sadm/pkg
     mkdir -p "$ZONEROOT/var/sadm/pkg"
-    /usr/bin/find `cat ${TDIR}/splist` -name save -prune -o -print | cpio -pdmq "$ZONEROOT/var/sadm/pkg"
+    /usr/bin/find $(cat ${TDIR}/splist) -name save -prune -o -print | cpio -pdmq "$ZONEROOT/var/sadm/pkg"
     cd /
 else
     mkdir -p "$ZONEROOT/var/sadm/pkg"
@@ -242,9 +242,9 @@ ln -s ./usr/bin "$ZONEROOT/bin"
 #
 cd /var/sadm/pkg
 if [ -n "$copy_overlays" ]; then
-    find `cat ${TDIR}/splist` -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | awk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
+    find $(cat ${TDIR}/splist) -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | awk -v DEST="$ZONEROOT" '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
 else
-    find * -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | awk -v DEST=$ZONEROOT '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
+    find * -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|root|var)' | awk -v DEST="$ZONEROOT" '{s=$1; gsub(/.*reloc/,"",s); print "cp /var/sadm/pkg/"$1, DEST""s }' | sh -s
 fi
 cd /
 
@@ -253,9 +253,9 @@ cd /
 # filter by installed overlays/packages
 #
 if [ -n "$copy_overlays" ]; then
-    ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > $ZONEROOT/var/sadm/install/contents
+    ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' "$CONTENTS_SOURCE" | /bin/tr ' ' '\012' | fgrep -xv -f ${TDIR}/xplist | /bin/tr '\012' ' ' | /usr/bin/gsed 's: /:\n/:g' | /usr/bin/gsed 's: $:\n:g' > "$ZONEROOT/var/sadm/install/contents"
 else
-    ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' $CONTENTS_SOURCE > $ZONEROOT/var/sadm/install/contents
+    ${EGREP} -v '^/(boot|kernel|devices|opt|platform)' "$CONTENTS_SOURCE" > "$ZONEROOT/var/sadm/install/contents"
 fi
 
 #
@@ -263,7 +263,7 @@ fi
 # this must be done before adding additional overlays,
 # which might populate /opt
 #
-for opkg in `${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
+for opkg in $(${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::) $(cat /usr/lib/brand/tribblix-common/pkg.ignorelist)
 do
     rm -fr "$ZONEROOT/var/sadm/pkg/$opkg"
 done
@@ -359,14 +359,14 @@ printf "$m_done\n"
 # run any postinstall scripts
 # manually skip anything running add_drv
 #
-cd $ZONEROOT/var/sadm/pkg
+cd "$ZONEROOT/var/sadm/pkg"
 for pkg in *
 do
-    if [ -x /var/sadm/pkg/${pkg}/save/pspool/${pkg}/install/postinstall ]; then
-	/usr/bin/grep -q add_drv /var/sadm/pkg/${pkg}/save/pspool/${pkg}/install/postinstall
+    if [ -x "/var/sadm/pkg/${pkg}/save/pspool/${pkg}/install/postinstall" ]; then
+	/usr/bin/grep -q add_drv "/var/sadm/pkg/${pkg}/save/pspool/${pkg}/install/postinstall"
 	if (( $? != 0 )); then
 	    echo "Executing postinstall for $pkg"
-	    env BASEDIR=$ZONEROOT /var/sadm/pkg/${pkg}/save/pspool/${pkg}/install/postinstall
+	    env BASEDIR="$ZONEROOT" "/var/sadm/pkg/${pkg}/save/pspool/${pkg}/install/postinstall"
 	fi
     fi
 done

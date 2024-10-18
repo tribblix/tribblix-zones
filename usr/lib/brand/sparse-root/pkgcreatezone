@@ -150,7 +150,7 @@ find /var/sadm/pkg/*/save/pspool -xdev -type f | ${EGREP} 'pspool/.*/reloc/(etc|
 #
 # remove metadata for any installed packages that populate /opt
 #
-for opkg in `${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::` `cat /usr/lib/brand/tribblix-common/pkg.ignorelist`
+for opkg in $(${GREP} '^/opt ' /var/sadm/install/contents | cut -d ' ' -f7- | sed s:SUNWcs::) $(cat /usr/lib/brand/tribblix-common/pkg.ignorelist)
 do
     rm -fr "$ZONEROOT/var/sadm/pkg/$opkg"
 done
