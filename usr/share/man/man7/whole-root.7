@@ -1,4 +1,4 @@
-.TH "WHOLE-ROOT" "7" "October 2, 2022" "Tribblix"
+.TH "WHOLE-ROOT" "7" "November 19, 2024" "Tribblix"
 .SH "NAME"
 whole-root zone variant
 .SH DESCRIPTION
@@ -8,7 +8,7 @@ to, the whole-root zones in Solaris 10.
 By default, the newly created zone will have a complete copy of the
 software installed in the global zone. Unlike Solaris 10, you can
 easily create a zone with a subset of the global zone's software
-package, and can easily add additional software.
+packages, and can easily add additional software at zone creation time.
 .LP
 The recommended way to create zones in Tribblix is to use the
 zone-create subcommand of the \fBzap\fR(1) utility.
@@ -64,5 +64,8 @@ for example.
 .in -2
 .sp
 .SH SEE ALSO
-\fBzap\fR(1), \fBbrands\fR(7), \fBoverlays\fR(7), \fBsparse-root\fR(7),
-\fBzones\fR(7)
+.BR zap (1),
+.BR brands (7),
+.BR overlays (7),
+.BR sparse-root (7),
+.BR zones (7)
