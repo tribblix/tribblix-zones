@@ -1,0 +1,109 @@
+#!/bin/ksh
+#
+# SPDX-License-Identifier: CDDL-1.0
+#
+# {{{ CDDL HEADER
+#
+# This file and its contents are supplied under the terms of the
+# Common Development and Distribution License ("CDDL"), version 1.0.
+# You may only use this file in accordance with the terms of version
+# 1.0 of the CDDL.
+#
+# A full copy of the text of the CDDL should have accompanied this
+# source. A copy of the CDDL is also available via the Internet at
+# http://www.illumos.org/license/CDDL.
+#
+# }}}
+#
+# Copyright 2025 Peter Tribble
+#
+
+#
+# this is a custom variant of zap's retrieve-pkg, designed explicitly
+# for downloading the zmvi packages for appstack zones
+#
+
+ZAPLIBDIR="/usr/lib/zap"
+GPGEXE="/usr/bin/gpg"
+# TRIBVER is the version of the packages
+TRIBVER=$(${ZAPLIBDIR}/pkgversion SUNWcs)
+SPKG="TRIBzmvi-s"
+XPKG="TRIBzmvi-x"
+CACHE_DIR=$(${ZAPLIBDIR}/zap-cfg cache-dir)
+# OSVER is the version of the repo
+OSVER=$(</etc/zap/version.current)
+REPO="https://pkgs.tribblix.org/zmvi-${OSVER}"
+
+#
+# if we already have the packages downloaded, exit immediately
+#
+if [[ -f "${CACHE_DIR}/${SPKG}.${TRIBVER}.zap" && -f "${CACHE_DIR}/${XPKG}.${TRIBVER}.zap" ]]; then
+    exit 0
+fi
+
+USER_AGENT="zap"/$(${ZAPLIBDIR}/zap-cfg pkgversion)
+ZAP_PROXY=$(${ZAPLIBDIR}/zap-cfg proxy)
+# signed package verification requires gnupg be installed
+SIGNER="tribblix"
+if [ ! -x ${GPGEXE} ]; then
+    SIGN_POLICY="no"
+else
+    SIGN_POLICY="if-signed"
+fi
+
+if [ -n "$ZAP_PROXY" ]; then
+    http_proxy=$ZAP_PROXY
+    export http_proxy
+fi
+
+WCLIENT=/usr/bin/curl
+WARGS="-A ${USER_AGENT} -f -s -o"
+if [ ! -x $WCLIENT ]; then
+    WCLIENT=/usr/bin/wget
+    WARGS="-U ${USER_AGENT} -q -O"
+fi
+if [ ! -x $WCLIENT ]; then
+    WCLIENT=/usr/bin/wget2
+    WARGS="-U ${USER_AGENT} -q -O"
+fi
+
+#
+# the verification here is mostly for debugging at this time
+#
+for pkg in "$SPKG" "$XPKG"
+do
+    fpkgname="${pkg}.${TRIBVER}.zap"
+    zfile="${CACHE_DIR}/${fpkgname}"
+    echo "Fetching ${REPO}/${fpkgname}"
+    ${WCLIENT} ${WARGS} "${zfile}" "${REPO}/${fpkgname}"
+    if [ -s "${zfile}" ]; then
+	if [ "X$SIGN_POLICY" != "Xno" ]; then
+	    ${WCLIENT} ${WARGS} "${zfile}.sig" "${REPO}/${fpkgname}.sig"
+	    if [ -f "${zfile}.sig" ]; then
+		${GPGEXE} --no-options --homedir "/etc/zap/sign/${SIGNER}" --verify "${zfile}.sig" "${zfile}" 2>/dev/null
+		SIGN_OK=$?
+		if [ $SIGN_OK -eq 0 ]; then
+		    echo "Signature verified"
+		else
+		    echo "Signature verification failed"
+		    /usr/bin/rm -f "${zfile}.sig" "${zfile}"
+		fi
+	    else
+		echo "ERROR: missing signature ${zfile}.sig"
+	    fi
+	else
+	    echo "WARN: unable to verify downloads"
+	fi
+    else
+	echo "ERROR: empty download"
+	/usr/bin/rm -f "${zfile}.sig" "${zfile}"
+    fi
+done
+
+#
+# if we got both, then success
+#
+if [[ -f "${CACHE_DIR}/${SPKG}.${TRIBVER}.zap" && -f "${CACHE_DIR}/${XPKG}.${TRIBVER}.zap" ]]; then
+    exit 0
+fi
+exit 1

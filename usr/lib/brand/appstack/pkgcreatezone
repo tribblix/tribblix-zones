@@ -1,0 +1,123 @@
+#!/bin/ksh -p
+#
+# SPDX-License-Identifier: CDDL-1.0
+#
+# {{{ CDDL HEADER
+#
+# This file and its contents are supplied under the terms of the
+# Common Development and Distribution License ("CDDL"), version 1.0.
+# You may only use this file in accordance with the terms of version
+# 1.0 of the CDDL.
+#
+# A full copy of the text of the CDDL should have accompanied this
+# source. A copy of the CDDL is also available via the Internet at
+# http://www.illumos.org/license/CDDL.
+#
+# }}}
+#
+
+#
+# Copyright 2025 Peter Tribble
+#
+
+. /usr/lib/brand/tribblix-common/common.ksh
+
+f_interrupted=$(gettext "Installation cancelled due to interrupt.\n")
+
+m_image=$(gettext       "       Image: Preparing at %s.")
+
+m_usage=$(gettext "\n        install [-h]\n        [ -P package [...]]")
+
+m_done=$(gettext      " done.")
+
+trap_cleanup() {
+	print "$f_interrupted"
+	exit $int_code
+}
+
+int_code=$ZONE_SUBPROC_NOTCOMPLETE
+trap trap_cleanup INT
+
+add_packages=""
+ZONENAME=""
+ZONEPATH=""
+
+# Setup i18n output
+TEXTDOMAIN="SUNW_OST_OSCMD"
+export TEXTDOMAIN
+
+unset msg
+
+while getopts "hP:R:z:" opt; do
+	case $opt in
+		h)	fail_usage "";;
+		P)	add_packages="$add_packages $OPTARG" ;;
+		R)	ZONEPATH="$OPTARG" ;;
+		z)	ZONENAME="$OPTARG" ;;
+		*)	fail_usage "";;
+	esac
+done
+shift $((OPTIND-1))
+
+if [[ -z $ZONEPATH || -z $ZONENAME ]]; then
+	print -u2 "Brand error: No zone path or name"
+	exit $ZONE_SUBPROC_USAGE
+fi
+
+# XXX shared/common script currently uses lower case zonename & zonepath
+zonename="$ZONENAME"
+zonepath="$ZONEPATH"
+
+ZONEROOT=$ZONEPATH/root
+
+#
+# Before installing the zone, set up ZFS dataset hierarchy for the zone root
+# dataset.
+#
+create_active_ds
+
+printf "$m_image\n" "$ZONEROOT"
+
+#
+# unconditionally download the packages, if they're already downloaded
+# this will be a no-op
+#
+/usr/lib/brand/appstack/dl-zmvi
+
+ZAPLIBDIR="/usr/lib/zap"
+CACHE_DIR=$(${ZAPLIBDIR}/zap-cfg cache-dir)
+TRIBVER=$(${ZAPLIBDIR}/pkgversion SUNWcs)
+SPKG="TRIBzmvi-s"
+XPKG="TRIBzmvi-x"
+IPTYPE=$(/usr/sbin/zoneadm -z "${ZONENAME}" list -p | /usr/bin/awk -F: '{print $7}')
+#
+# install the mvi base package
+#
+${ZAPLIBDIR}/instzap -R "${ZONEROOT}" "${CACHE_DIR}/${SPKG}.${TRIBVER}.zap"
+#
+# if this is an exclusive-ip zone, install the mvi networking components
+#
+case $IPTYPE in
+    exclusive)
+	${ZAPLIBDIR}/instzap -R "${ZONEROOT}" "${CACHE_DIR}/${XPKG}.${TRIBVER}.zap"
+	;;
+esac
+
+#
+# add additional packages, which are just normal Tribblix packages
+#
+if [ -n "$add_packages" ]; then
+    for extra_pkg in $add_packages
+    do
+	/usr/bin/zap install -R "${ZONEROOT}" "$extra_pkg"
+    done
+fi
+/usr/bin/pkgadm sync -R "${ZONEROOT}" -q
+
+printf "$m_done\n"
+
+printf "$m_complete\n\n" ${SECONDS}
+printf "$m_postnote\n"
+printf "$m_postnote2\n"
+
+exit $ZONE_SUBPROC_OK

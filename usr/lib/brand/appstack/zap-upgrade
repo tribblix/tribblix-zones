@@ -1,0 +1,156 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: CDDL-1.0
+#
+# {{{ CDDL HEADER
+#
+# This file and its contents are supplied under the terms of the
+# Common Development and Distribution License ("CDDL"), version 1.0.
+# You may only use this file in accordance with the terms of version
+# 1.0 of the CDDL.
+#
+# A full copy of the text of the CDDL should have accompanied this
+# source. A copy of the CDDL is also available via the Internet at
+# http://www.illumos.org/license/CDDL.
+#
+# }}}
+#
+# Copyright 2025 Peter Tribble
+#
+
+#
+# upgrade a appstack zone, not yet supported
+#
+# called with the following flags
+#
+# -R - alternate root
+# -b - brand
+# -z - zone name
+# -p - zone path (the path in the old global zone)
+# -v - new Tribblix version
+#
+MYBRAND="appstack"
+ALTROOT=""
+ZBRAND=""
+ZNAME=""
+ZPATH=""
+NVER=""
+
+usage() {
+    echo "Usage: $0 -R altroot -b brand -z zone_name -p zone_path -v version"
+}
+
+bail() {
+    usage
+    echo "ERROR: $1"
+    exit 1
+}
+
+while getopts "R:b:p:v:z:" opt; do
+case $opt in
+R)
+    ALTROOT="$OPTARG"
+    ;;
+b)
+    ZBRAND="$OPTARG"
+    ;;
+p)
+    ZPATH="$OPTARG"
+    ;;
+v)
+    NVER="$OPTARG"
+    ;;
+z)
+    ZNAME="$OPTARG"
+    ;;
+*)
+    bail "Invalid argument $opt"
+    ;;
+esac
+done
+shift $((OPTIND - 1))
+
+#
+# there should be no more arguments
+#
+if [ $# -gt 0 ]; then
+    bail "Extra arguments"
+fi
+
+#
+# all arguments must have been supplied
+#
+if [ -z "${ALTROOT}" ]; then
+    bail "alternate root must be supplied"
+fi
+if [ -z "${ZBRAND}" ]; then
+    bail "brand must be supplied"
+fi
+if [ -z "${ZPATH}" ]; then
+    bail "zone path must be supplied"
+fi
+if [ -z "${ZNAME}" ]; then
+    bail "zone name must be supplied"
+fi
+if [ -z "${NVER}" ]; then
+    bail "new version must be supplied"
+fi
+
+#
+# validate arguments
+#
+# alternate root must be an absolute path, must not be /,
+# must be the root of a Tribblix image
+#
+# the version check later proves it's not equivalent to /
+#
+case $ALTROOT in
+    "/")
+	bail "alternate root cannot be /"
+	;;
+    /*)
+	:
+	;;
+    *)
+	bail "alternate root must be an absolute path"
+	;;
+esac
+if [ ! -d "${ALTROOT}" ]; then
+    bail "alternate root must exist"
+fi
+#
+# the zone's brand must be the same as this script's brand
+#
+if [ "${ZBRAND}" != "${MYBRAND}" ]; then
+    bail "incorrect brand, must be ${MYBRAND}"
+fi
+#
+# current zone properties
+#
+/usr/sbin/zoneadm -z "${ZNAME}" list -p | awk -F: '{print $4, $6}' | read -r nzpath nzbrand
+#
+# the zone path must be the zone path for this zone
+#
+if [ "${ZPATH}" != "${nzpath}" ]; then
+    bail "incorrect zone path for zone ${ZNAME}"
+fi
+#
+# the named zone must be of this brand
+#
+if [ "${ZBRAND}" != "${nzbrand}" ]; then
+    bail "incorrect brand, ${ZNAME} is ${nzbrand}"
+fi
+#
+# the minimalist nature of an appstack zone means that most, if not all,
+# of the normal zap machinery is missing, so we can't really make any
+# consistency checks
+#
+
+#
+# now do the upgrade
+#
+
+#
+# this is currently unimplemented
+#
+exit 1
