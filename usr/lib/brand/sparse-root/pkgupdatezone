@@ -1,0 +1,206 @@
+#!/bin/ksh -p
+#
+# SPDX-License-Identifier: CDDL-1.0
+#
+# CDDL HEADER START
+#
+# The contents of this file are subject to the terms of the
+# Common Development and Distribution License (the "License").
+# You may not use this file except in compliance with the License.
+#
+# You can obtain a copy of the license at usr/src/OPENSOLARIS.LICENSE
+# or http://www.opensolaris.org/os/licensing.
+# See the License for the specific language governing permissions
+# and limitations under the License.
+#
+# When distributing Covered Code, include this CDDL HEADER in each
+# file and include the License file at usr/src/OPENSOLARIS.LICENSE.
+# If applicable, add the following below this CDDL HEADER, with the
+# fields enclosed by brackets "[]" replaced with your own identifying
+# information: Portions Copyright [yyyy] [name of copyright owner]
+#
+# CDDL HEADER END
+#
+
+#
+# Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
+#
+# Copyright (c) 2013-2025 Peter C. Tribble peter.tribble@gmail.com
+#
+
+. /usr/lib/brand/tribblix-common/common.ksh
+
+ALTROOT=""
+ZONENAME=""
+ZONEPATH=""
+
+usage() {
+    echo "Usage: $0 -R zonepath -A altroot -z zone_name"
+}
+
+bail() {
+    usage
+    echo "ERROR: $1"
+    exit 1
+}
+
+# Setup i18n output
+TEXTDOMAIN="SUNW_OST_OSCMD"
+export TEXTDOMAIN
+
+#
+# this is like pkgcreatezone, and unfortunately we use -R for the zone
+# path so can't use -R for ALTROOT
+#
+# so zap-upgrade -R -> our -A
+#    zap-upgrade -p -> our -R
+#
+while getopts "hA:R:z:" opt; do
+	case $opt in
+		h)	bail "invalid argument";;
+		A)	ALTROOT="$OPTARG" ;;
+		R)	ZONEPATH="$OPTARG" ;;
+		z)	ZONENAME="$OPTARG" ;;
+		*)	bail "invalid argument";;
+	esac
+done
+shift $((OPTIND-1))
+
+if [[ -z $ZONEPATH || -z $ZONENAME || -z $ALTROOT ]]; then
+    bail "No zone path or name or altroot"
+fi
+
+# XXX shared/common script currently uses lower case zonename & zonepath
+zonename="$ZONENAME"
+zonepath="$ZONEPATH"
+
+#
+# note that ZONEROOT is the full path in the alternate root
+#
+ZONEROOT=${ALTROOT}/${ZONEPATH}/root
+
+#
+# using ggrep is much faster on the invocations dealing with the
+# contents file
+#
+GREP=/usr/bin/grep
+EGREP=/usr/bin/egrep
+FGREP=/usr/bin/fgrep
+if [ -x /usr/gnu/bin/grep ]; then
+    GREP=/usr/gnu/bin/grep
+    EGREP="/usr/gnu/bin/grep -E"
+    FGREP="/usr/gnu/bin/grep -F"
+fi
+
+#
+# as we parse the contents file, make sure it gets flushed
+#
+/usr/bin/pkgadm sync -R "${ALTROOT}"
+
+#
+# first handle deprecated overlays and packages, we simply remove the
+# metadata
+#
+if [ -f "${ALTROOT}/usr/share/zap/deprecated.pkgs" ]; then
+    echo "Removing obsoleted packages in zone ${ZONENAME}"
+    for oldpkg in $(cat "${ALTROOT}/usr/share/zap/deprecated.pkgs")
+    do
+	if [ -f "${ZONEROOT}/var/sadm/pkg/${oldpkg}/pkginfo" ]; then
+	    rm -fr "${ZONEROOT}/var/sadm/pkg/${oldpkg}"
+	fi
+    done
+fi
+if [ -f "${ALTROOT}/usr/share/zap/deprecated.ovl" ]; then
+    echo "Removing obsoleted overlays in zone ${ZONENAME}"
+    for oldovl in $(cat "${ALTROOT}/usr/share/zap/deprecated.ovl")
+    do
+	/usr/bin/rm -f "${ZONEROOT}/var/sadm/overlays/${oldovl}.pkgs"
+	/usr/bin/rm -f "${ZONEROOT}/var/sadm/overlays/${oldovl}.ovl"
+	/usr/bin/rm -f "${ZONEROOT}/var/sadm/overlays/${oldovl}.pkgs.bak"
+	/usr/bin/rm -f "${ZONEROOT}/var/sadm/overlays/${oldovl}.ovl.bak"
+	/usr/bin/rm -f "${ZONEROOT}/var/sadm/overlays/installed/${oldovl}"
+    done
+fi
+#
+# synchronize package and overlay metadata with the new global zone
+# handle anything installed locally in the zone
+# cpio -u to ensure we always replace
+#
+# save metadata for any local zone packages that populate /opt
+#
+mkdir -p "$ZONEROOT/var/sadm/pkg.zone"
+for opkg in $(${GREP} '^/opt ' "${ZONEROOT}/var/sadm/install/contents" | cut -d ' ' -f7- | sed s:SUNWcs::)
+do
+    mv "$ZONEROOT/var/sadm/pkg/$opkg" "$ZONEROOT/var/sadm/pkg.zone/$opkg"
+done
+#
+# sync from the upgraded global zone
+#
+cd "${ALTROOT}" || bail "cd to $ALTROOT failed"
+find var/sadm/pkg/* var/sadm/overlays -name save -prune -o -print | cpio -pdmqu "$ZONEROOT"
+#
+# remove metadata for any global packages that populate /opt
+#
+for opkg in $(${GREP} '^/opt ' "${ALTROOT}/var/sadm/install/contents" | cut -d ' ' -f7- | sed s:SUNWcs::) $(cat "${ALTROOT}/usr/lib/brand/tribblix-common/pkg.ignorelist")
+do
+    rm -fr "$ZONEROOT/var/sadm/pkg/$opkg"
+done
+#
+# move any saved local zone packages back
+#
+for opkg in $(${GREP} '^/opt ' "${ZONEROOT}/var/sadm/install/contents" | cut -d ' ' -f7- | sed s:SUNWcs::)
+do
+    mv "$ZONEROOT/var/sadm/pkg.zone/$opkg" "$ZONEROOT/var/sadm/pkg"
+done
+rm -fr "$ZONEROOT/var/sadm/pkg.zone"
+
+cd "${ALTROOT}" || bail "cd to $ALTROOT failed"
+#
+# we leave the zone's root and var untouched, and mostly etc
+# but there are some genuine binaries in /etc we need to update
+#
+find etc/fs -type f | cpio -pdmqu "$ZONEROOT"
+#
+# and we need to resync the zap metadata
+#
+find etc/zap -type f | cpio -pdmqu "$ZONEROOT"
+
+#
+# The /zonelib/lib path ought to exist, but the main upgrade process will
+# wipe it, the first sparse root zone upgrade will repopulate it here.
+#
+# Unfortunately we have to rely on the *old* unupgraded zonecfg.
+#
+CFGZONELIB=$(LC_ALL=C zonecfg -z "$ZONENAME" info fs dir=/lib | grep special: | awk '{print $NF}')
+# ZONELIBTOP is the path in the alternate root
+ZONELIBTOP=${ALTROOT}/${CFGZONELIB%/*}
+if [ ! -d "${ZONELIBTOP}/lib/svc" ]; then
+    ${GREP} '^/lib' "${ALTROOT}/var/sadm/install/contents" | awk '{print $1}' | sed -e 's:=: :' -e 's:/::' | awk '{print $1}' | cpio -pdmq "${ZONELIBTOP}"
+    #
+    # remove ignored files
+    #
+    rm -f $(awk -v DEST="$ZONELIBTOP" '{print DEST"/"$1}' "${ALTROOT}/usr/lib/brand/tribblix-common/lib.ignorelist")
+fi
+
+#
+# and remove any other files that should never exist in a zone,
+# just in case they have reappeared
+#
+rm -f $(awk -v DEST="$ZONEROOT" '{print DEST"/"$1}' "${ALTROOT}/usr/lib/brand/tribblix-common/sparse.ignorelist")
+
+#
+# remove the desktop cache updates that we don't need in a read-only zone
+#
+rm -fr "$ZONEROOT/var/svc/manifest/application/desktop-cache"
+rm -fr "$ZONEROOT/lib/svc/manifest/application/font"
+
+#
+# copy in a cleaned up contents file
+# TODO merge in anything locally from /opt
+#
+TBFILE=/tmp/il.${ZONENAME}.fg.$$
+cat "${ALTROOT}/usr/lib/brand/tribblix-common/lib.ignorelist" "${ALTROOT}/usr/lib/brand/tribblix-common/sparse.ignorelist" > "$TBFILE"
+echo "/var/svc/manifest/application/desktop-cache" >> "$TBFILE"
+echo "/lib/svc/manifest/application/font" >> "$TBFILE"
+${EGREP} -v '^/(boot|kernel|devices|opt|platform)' "${ALTROOT}/var/sadm/install/contents" | ${FGREP} -v -f "$TBFILE" > "$ZONEROOT/var/sadm/install/contents"
+rm -f "$TBFILE"
