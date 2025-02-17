@@ -22,7 +22,7 @@
 #
 # Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
 #
-# Copyright 2013-2023 Peter C. Tribble peter.tribble@gmail.com
+# Copyright 2013-2025 Peter C. Tribble peter.tribble@gmail.com
 #
 
 unset LD_LIBRARY_PATH
@@ -73,12 +73,12 @@ fail_usage() {
 }
 
 is_brand_labeled() {
-	if [ -z $ALTROOT ]; then
+	if [ -z "$ALTROOT" ]; then
 		AR_OPTIONS=""
 	else
 		AR_OPTIONS="-R $ALTROOT"
 	fi
-	brand=$(/usr/sbin/zoneadm $AR_OPTIONS -z $ZONENAME \
+	brand=$(/usr/sbin/zoneadm $AR_OPTIONS -z "$ZONENAME" \
 		list -p | awk -F: '{print $6}')
 	[[ $brand == "labeled" ]] && return 1
 	return 0
@@ -167,7 +167,7 @@ mount_active_ds() {
 	mount -p | cut -d' ' -f3 | egrep -s "^$ZONEPATH/root$"
 	if (( $? == 0 )); then
 		# Umount current dataset on the root (it might be an old BE).
-		umount $ZONEPATH/root
+		umount "$ZONEPATH/root"
 		if (( $? != 0 )); then
 			# The umount failed, leave the old BE mounted.
 			# Warn about gz process preventing umount.
@@ -178,10 +178,10 @@ mount_active_ds() {
 
 	# Mount active dataset on the root.
 	get_current_gzbe
-	get_zonepath_ds $ZONEPATH
-	get_active_ds $CURRENT_GZBE $ZONEPATH_DS
+	get_zonepath_ds "$ZONEPATH"
+	get_active_ds "$CURRENT_GZBE" "$ZONEPATH_DS"
 
-	mount -F zfs $ACTIVE_DS $ZONEPATH/root || fail_fatal "$f_zfs_mount"
+	mount -F zfs $ACTIVE_DS "$ZONEPATH/root" || fail_fatal "$f_zfs_mount"
 }
 
 #
@@ -194,10 +194,10 @@ create_active_ds() {
 	# Find the zone's current dataset.  This should have been created by
 	# zoneadm.
 	#
-	get_zonepath_ds $zonepath
+	get_zonepath_ds "$zonepath"
 
 	# Check that zone is not in the ROOT dataset.
-	fail_zonepath_in_rootds $ZONEPATH_DS
+	fail_zonepath_in_rootds "$ZONEPATH_DS"
 
 	#
 	# From here on, errors should cause the zone to be incomplete.
@@ -209,10 +209,10 @@ create_active_ds() {
 	# mountpoint, since these could already exist from some other BE.
 	#
 
-	/usr/sbin/zfs list -H -o name $ZONEPATH_DS/ROOT >/dev/null 2>&1
+	/usr/sbin/zfs list -H -o name "$ZONEPATH_DS/ROOT" >/dev/null 2>&1
 	if (( $? != 0 )); then
 		/usr/sbin/zfs create -o mountpoint=legacy \
-		    -o zoned=on $ZONEPATH_DS/ROOT
+		    -o zoned=on "$ZONEPATH_DS/ROOT"
 		if (( $? != 0 )); then
 			fail_fatal "$f_zfs_create"
 		fi
@@ -223,8 +223,8 @@ create_active_ds() {
 	# Try 100 different names before giving up.
 	while [ $BENUM -lt 100 ]; do
        		/usr/sbin/zfs create -o $PROP_ACTIVE=on \
-		    -o $PROP_PARENT=$CURRENT_GZBE \
-		    -o canmount=noauto $ZONEPATH_DS/ROOT/$BENAME >/dev/null 2>&1
+		    -o $PROP_PARENT="$CURRENT_GZBE" \
+		    -o canmount=noauto "$ZONEPATH_DS/ROOT/$BENAME" >/dev/null 2>&1
 		if (( $? == 0 )); then
 			break
 		fi
@@ -236,11 +236,11 @@ create_active_ds() {
 		fail_fatal "$f_zfs_create"
 	fi
 
-	if [ ! -d $ZONEROOT ]; then
-		/usr/bin/mkdir $ZONEROOT
+	if [ ! -d "$ZONEROOT" ]; then
+		/usr/bin/mkdir "$ZONEROOT"
 	fi
 
-	/usr/sbin/mount -F zfs $ZONEPATH_DS/ROOT/$BENAME $ZONEROOT || \
+	/usr/sbin/mount -F zfs "$ZONEPATH_DS/ROOT/$BENAME" "$ZONEROOT" || \
 	    fail_incomplete "$f_zfs_mount"
 }
 
@@ -253,9 +253,9 @@ unconfigure_zone() {
 
 	vlog "$v_mounting"
 	ZONE_IS_MOUNTED=1
-	zoneadm -z $ZONENAME mount -f || fatal "$e_badmount"
+	zoneadm -z "$ZONENAME" mount -f || fatal "$e_badmount"
 
-	zlogin -S $ZONENAME /usr/sbin/sys-unconfig -R /a \
+	zlogin -S "$ZONENAME" /usr/sbin/sys-unconfig -R /a \
 	    </dev/null >/dev/null 2>&1
 	if (( $? != 0 )); then
 		error "$e_unconfig"
@@ -263,7 +263,7 @@ unconfigure_zone() {
 	fi
 
 	vlog "$v_unmount"
-	zoneadm -z $ZONENAME unmount || fatal "$e_badunmount"
+	zoneadm -z "$ZONENAME" unmount || fatal "$e_badunmount"
 	ZONE_IS_MOUNTED=0
 
 	[[ -n $failed ]] && fatal "$e_exitfail"
@@ -277,9 +277,9 @@ unconfigure_tribblix_zone() {
 
 	vlog "$v_mounting"
 	ZONE_IS_MOUNTED=1
-	zoneadm -z $ZONENAME mount -f || fatal "$e_badmount"
+	zoneadm -z "$ZONENAME" mount -f || fatal "$e_badmount"
 
-	zlogin -S $ZONENAME /usr/bin/zap unconfigure \
+	zlogin -S "$ZONENAME" /usr/bin/zap unconfigure \
 	    </dev/null >/dev/null 2>&1
 	if (( $? != 0 )); then
 		error "$e_unconfig"
@@ -287,7 +287,7 @@ unconfigure_tribblix_zone() {
 	fi
 
 	vlog "$v_unmount"
-	zoneadm -z $ZONENAME unmount || fatal "$e_badunmount"
+	zoneadm -z "$ZONENAME" unmount || fatal "$e_badunmount"
 	ZONE_IS_MOUNTED=0
 
 	[[ -n $failed ]] && fatal "$e_exitfail"
