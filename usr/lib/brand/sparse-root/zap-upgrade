@@ -15,7 +15,7 @@
 #
 # }}}
 #
-# Copyright 2024 Peter Tribble
+# Copyright 2025 Peter Tribble
 #
 
 #
@@ -209,14 +209,14 @@ if [ -x "${ALTROOT}/usr/lib/zap/list-zone-templates" ]; then
 fi
 
 # the zone must have the same version as the current global zone
-if [ ! -f "${ZPATH}/etc/zap/version.current" ]; then
+if [ ! -f "${ZPATH}/root/etc/zap/version.current" ]; then
     bail "unable to detect zone current version"
 fi
-ozver=$(<"${ZPATH}/etc/zap/version.current")
+ozver=$(<"${ZPATH}/root/etc/zap/version.current")
 if [ ! -f "${ALTROOT}/${ZPATH}/etc/zap/version.current" ]; then
     bail "unable to detect zone upgrade version"
 fi
-nzver=$(<"${ALTROOT}/${ZPATH}/etc/zap/version.current")
+nzver=$(<"${ALTROOT}/${ZPATH}/root/etc/zap/version.current")
 if [ "${ozver}" != "${ogver}" ]; then
     bail "zone version doesn't match global zone"
 fi
