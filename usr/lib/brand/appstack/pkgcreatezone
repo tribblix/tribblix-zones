@@ -39,6 +39,8 @@ int_code=$ZONE_SUBPROC_NOTCOMPLETE
 trap trap_cleanup INT
 
 add_packages=""
+APPSTACK=""
+APPCONFIG=""
 ZONENAME=""
 ZONEPATH=""
 
@@ -48,8 +50,10 @@ export TEXTDOMAIN
 
 unset msg
 
-while getopts "hP:R:z:" opt; do
+while getopts "a:A:hP:R:z:" opt; do
 	case $opt in
+		a)	APPSTACK="$OPTARG" ;;
+		A)	APPCONFIG="$OPTARG" ;;
 		h)	fail_usage "";;
 		P)	add_packages="$add_packages $OPTARG" ;;
 		R)	ZONEPATH="$OPTARG" ;;
@@ -78,18 +82,19 @@ create_active_ds
 
 printf "$m_image\n" "$ZONEROOT"
 
-#
-# unconditionally download the packages, if they're already downloaded
-# this will be a no-op
-#
-/usr/lib/brand/appstack/dl-zmvi
-
 ZAPLIBDIR="/usr/lib/zap"
 CACHE_DIR=$(${ZAPLIBDIR}/zap-cfg cache-dir)
 TRIBVER=$(${ZAPLIBDIR}/pkgversion SUNWcs)
 SPKG="TRIBzmvi-s"
 XPKG="TRIBzmvi-x"
 IPTYPE=$(/usr/sbin/zoneadm -z "${ZONENAME}" list -p | /usr/bin/awk -F: '{print $7}')
+
+#
+# unconditionally download the packages, if they're already downloaded
+# this will be a no-op
+#
+/usr/lib/brand/appstack/dl-zmvi -c "${CACHE_DIR}" -v "${TRIBVER}"
+
 #
 # install the mvi base package
 #

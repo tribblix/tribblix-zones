@@ -25,13 +25,41 @@
 
 ZAPLIBDIR="/usr/lib/zap"
 GPGEXE="/usr/bin/gpg"
-# TRIBVER is the version of the packages
-TRIBVER=$(${ZAPLIBDIR}/pkgversion SUNWcs)
+
 SPKG="TRIBzmvi-s"
 XPKG="TRIBzmvi-x"
-CACHE_DIR=$(${ZAPLIBDIR}/zap-cfg cache-dir)
+
+#
+# we can be passed the required version, or work it out ourselves
+#
+OSVER=""
+TRIBVER=""
+CACHE_DIR=""
+
+while getopts "v:c:" opt
+do
+    case $opt in
+	v)
+	    TRIBVER="$OPTARG"
+	    OSVER=${TRIBVER/0./m}
+	    ;;
+	c)
+	    CACHE_DIR="$OPTARG"
+	    ;;
+    esac
+done
+
+# TRIBVER is the version of the packages
+if [[ -z $TRIBVER ]]; then
+    TRIBVER=$(${ZAPLIBDIR}/pkgversion SUNWcs)
+fi
+if [[ -z $CACHE_DIR ]]; then
+    CACHE_DIR=$(${ZAPLIBDIR}/zap-cfg cache-dir)
+fi
 # OSVER is the version of the repo
-OSVER=$(</etc/zap/version.current)
+if [[ -z $OSVER ]]; then
+    OSVER=$(</etc/zap/version.current)
+fi
 REPO="https://pkgs.tribblix.org/zmvi-${OSVER}"
 
 #
