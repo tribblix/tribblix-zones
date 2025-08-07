@@ -11,6 +11,7 @@
 /sbin/ibd_delete_link
 /sbin/ibd_upgrade
 /usr/bin/diskinfo
+/usr/bin/ktest
 /usr/bin/ncalladm
 /usr/bin/nscadm
 /usr/bin/nskernd
@@ -125,6 +126,10 @@
 /usr/kernel/misc/amd64/rdcstub
 /usr/kernel/misc/amd64/spuni
 /usr/kernel/misc/amd64/vmm_vtd
+/usr/kernel/misc/ktest/amd64/i86pc_ktest
+/usr/kernel/misc/ktest/amd64/ktest_ktest
+/usr/kernel/misc/ktest/amd64/mac_ktest
+/usr/kernel/misc/ktest/amd64/stream_ktest
 /usr/kernel/pcbe/amd64/pcbe.AuthenticAMD
 /usr/kernel/pcbe/amd64/pcbe.GenuineIntel.15
 /usr/kernel/pcbe/amd64/pcbe.GenuineIntel.6.122
@@ -270,14 +275,17 @@
 /usr/lib/fm/libseslog.so
 /usr/lib/fm/libseslog.so.1
 /usr/lib/fm/topo/maps/xfp-hc-topology.xml
+usr/lib/fm/topo/plugins/dimm.so
 /usr/lib/fm/topo/plugins/disk.so
 /usr/lib/fm/topo/plugins/fac_prov_ahci.so
 /usr/lib/fm/topo/plugins/fac_prov_ipmi.so
+/usr/lib/fm/topo/plugins/fac_prov_libhp.so
 /usr/lib/fm/topo/plugins/fac_prov_mptsas.so
 /usr/lib/fm/topo/plugins/ipmi.so
 /usr/lib/fm/topo/plugins/nic.so
 /usr/lib/fm/topo/plugins/ses.so
 /usr/lib/fm/topo/plugins/smbios.so
+/usr/lib/fm/topo/plugins/ufm.so
 /usr/lib/fm/topo/plugins/usb.so
 /usr/lib/fm/topo/plugins/xfp.so
 /usr/lib/fwflash/identify/hermon.so
@@ -399,6 +407,7 @@
 /usr/platform/i86pc/lib/fm/topo/plugins/hostbridge.so
 /usr/platform/i86pc/lib/fm/topo/plugins/pcibus.so
 /usr/platform/i86pc/lib/fm/topo/plugins/x86pi.so
+/usr/platform/i86pc/lib/fm/topo/plugins/zen.so
 /usr/sbin/bhhwcompat
 /usr/sbin/bhyve
 /usr/sbin/bhyvectl
