@@ -170,7 +170,6 @@ fi
 #
 ZTEMPLATE=""
 TEMPLATEPATH=""
-TEMPLATESTYLE=""
 if [ -x "${ALTROOT}/usr/lib/zap/list-zone-templates" ]; then
     "${ALTROOT}/usr/lib/zap/list-zone-templates" -p | awk -F: '{print $1, $2, $3}' | while read -r ztname ztpath ztzname
     do
@@ -178,10 +177,9 @@ if [ -x "${ALTROOT}/usr/lib/zap/list-zone-templates" ]; then
 	    ZTEMPLATE="${ztname}"
 	    TEMPLATEPATH="${ztpath}"
 	    if [ ! -f "${TEMPLATEPATH}/etc/zap/version.current" ]; then
-		TEMPLATESTYLE="alien"
 		#
 		# this is the easy one, this is a non-Tribblix template
-		# so must be alien, and we don't touch it (for now)
+		# so must be alien, and we don't touch it
 		#
 		exit 0
 	    fi
@@ -192,10 +190,9 @@ if [ -x "${ALTROOT}/usr/lib/zap/list-zone-templates" ]; then
 	    # an alien version of Tribblix
 	    #
 	    if [ "${otver}" != "${ogver}" ]; then
-		TEMPLATESTYLE="alien"
 		#
 		# also easy, this is an alien Tribblix template
-		# and we don't touch it (for now)
+		# and we don't touch it
 		#
 		exit 0
 	    fi
@@ -203,7 +200,7 @@ if [ -x "${ALTROOT}/usr/lib/zap/list-zone-templates" ]; then
 	    # if we're still here then it's a whole Tribblix template
 	    # that matches the old global zone, so we need to handle it
 	    #
-	    TEMPLATESTYLE="whole"
+	    echo "Need to upgrade template ${ZTEMPLATE} at ${TEMPLATEPATH}"
 	fi
     done
 fi
