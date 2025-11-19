@@ -284,7 +284,7 @@ fi
 if [ -n "$add_packages" ]; then
     for extra_pkg in $add_packages
     do
-	/usr/bin/zap install -R "${ZONEROOT}" "$extra_pkg"
+	/usr/bin/zap install-pkg -R "${ZONEROOT}" "$extra_pkg"
     done
     /usr/bin/pkgadm sync -R "${ZONEROOT}" -q
 fi
