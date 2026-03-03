@@ -103,7 +103,7 @@ ${ZAPLIBDIR}/instzap -R "${ZONEROOT}" "${CACHE_DIR}/${SPKG}.${TRIBVER}.zap"
 # if this is an exclusive-ip zone, install the mvi networking components
 #
 case $IPTYPE in
-    exclusive)
+    excl*)
 	${ZAPLIBDIR}/instzap -R "${ZONEROOT}" "${CACHE_DIR}/${XPKG}.${TRIBVER}.zap"
 	;;
 esac
