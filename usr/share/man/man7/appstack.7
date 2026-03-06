@@ -1,0 +1,45 @@
+.TH "APPSTACK" "7" "March 6, 2026" "Tribblix"
+.SH "NAME"
+appstack zone variant
+.SH DESCRIPTION
+The appstack zone brand in Tribblix is a custom minimalist zone
+designed to run a single application stack (appstack).
+.LP
+The base operating system is supplied as a special package, while
+applications are deployed using normal Tribblix packages.
+.LP
+To list available appstacks, use the appstack subcommand of the
+\fBzap\fR(1) utility.
+.sp
+.in +2
+.nf
+\fBzap appstack list\fR
+.fi
+.in -2
+.sp
+.LP
+The recommended way to create zones in Tribblix is to use the
+create-zone subcommand of the \fBzap\fR(1) utility.
+.LP
+For an appstack zone, specify -t appstack as follows.
+.sp
+.in +2
+.nf
+\fBzap create-zone -t appstack -a appstack_name [-A config_file] ...\fR
+.fi
+.in -2
+.sp
+The \fIappstack_name\fR must be supplied; the \fIconfig_file\fR is
+optional but allows some configuration of the appstack. A suitable
+\fIconfig_file\fR can be generated interactively as follows:
+.sp
+.in +2
+.nf
+\fBzap appstack configure appstack_name config_file\fR
+.fi
+.in -2
+.sp
+.SH SEE ALSO
+.BR zap (1),
+.BR brands (7),
+.BR zones (7)
