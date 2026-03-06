@@ -17,7 +17,7 @@
 #
 
 #
-# Copyright 2025 Peter Tribble
+# Copyright 2026 Peter Tribble
 #
 
 . /usr/lib/brand/tribblix-common/common.ksh
@@ -117,6 +117,10 @@ if [ -n "$add_packages" ]; then
 	/usr/bin/zap install -R "${ZONEROOT}" "$extra_pkg"
     done
 fi
+for extra_pkg in $(/packages/localsrc/Tribblix/zap/usr/lib/zap/appstack get_data "${APPSTACK}" appstack.pkgs)
+do
+    /usr/bin/zap install -R "${ZONEROOT}" "$extra_pkg"
+done
 /usr/bin/pkgadm sync -R "${ZONEROOT}" -q
 
 printf "$m_done\n"
