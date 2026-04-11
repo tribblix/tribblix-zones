@@ -15,7 +15,7 @@
 #
 # }}}
 #
-# Copyright 2025 Peter Tribble
+# Copyright 2026 Peter Tribble
 #
 
 #
@@ -61,6 +61,11 @@ if [[ -z $OSVER ]]; then
     OSVER=$(</etc/zap/version.current)
 fi
 REPO="https://pkgs.tribblix.org/zmvi-${OSVER}"
+case $(uname -p) in
+sparc)
+    REPO="https://pkgs.tribblix.org/zmvi-${OSVER}.sparc"
+    ;;
+esac
 
 #
 # if we already have the packages downloaded, exit immediately
