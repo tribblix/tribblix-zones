@@ -15,7 +15,7 @@
 #
 # }}}
 #
-# Copyright 2025 Peter Tribble
+# Copyright 2026 Peter Tribble
 #
 
 #
@@ -226,8 +226,15 @@ fi
 #
 # now do the upgrade
 #
+if [ ! -f "${ALTROOT}/usr/lib/brand/${MYBRAND}/pkgupdatezone" ]; then
+    bail "brand-specific pkgupdatezone not found"
+fi
+#
+# the upgrade script uses different flags
+#
+${ALTROOT}/usr/lib/brand/${MYBRAND}/pkgupdatezone -A "${ALTROOT}" -R "${ZPATH}" -z "${ZNAME}"
 
 #
-# this is currently unimplemented
+# this is currently untested
 #
-exit 1
+exit 0
