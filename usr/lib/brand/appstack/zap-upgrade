@@ -15,11 +15,11 @@
 #
 # }}}
 #
-# Copyright 2025 Peter Tribble
+# Copyright 2026 Peter Tribble
 #
 
 #
-# upgrade a appstack zone, not yet supported
+# upgrade a appstack zone
 #
 # called with the following flags
 #
@@ -141,16 +141,88 @@ if [ "${ZBRAND}" != "${nzbrand}" ]; then
     bail "incorrect brand, ${ZNAME} is ${nzbrand}"
 fi
 #
-# the minimalist nature of an appstack zone means that most, if not all,
-# of the normal zap machinery is missing, so we can't really make any
-# consistency checks
+# the new version must match that of the global zone in the alternate root
+# the new version must not be the same as the current root
 #
+if [ ! -f /etc/zap/version.current ]; then
+    bail "unable to detect current version"
+fi
+ogver=$(</etc/zap/version.current)
+if [ ! -f "${ALTROOT}/etc/zap/version.current" ]; then
+    bail "unable to detect upgrade version"
+fi
+ngver=$(<"${ALTROOT}/etc/zap/version.current")
+if [ "${NVER}" != "${ngver}" ]; then
+    bail "requested version doesn't match"
+fi
+if [ "${ogver}" = "${ngver}" ]; then
+    bail "version hasn't been upgraded"
+fi
+
+#
+# check that this is indeed an appstack zone, it should always have the
+# TRIBmvi-s package, the TRIBmvi-x package is optional
+#
+if [ ! -d "${ZPATH}/root/var/sadm/pkg/TRIBmvi-s" ]; then
+    bail "bad zone, no TRIBmvi-s package"
+fi
+if [ ! -d "${ALTROOT}/${ZPATH}/root/var/sadm/pkg/TRIBmvi-s" ]; then
+    bail "bad zone, no TRIBmvi-s package"
+fi
+#
+# check the version of that package
+#
+ozver=$(${ZAPLIBDIR}/pkgversion -R "${ZPATH}/root" TRIBmvi-s)
+OSVER=${ozver/0./m}
+# the zone must have the same version as the current global zone
+if [ "${ozver}" != "${ogver}" ]; then
+    bail "zone version doesn't match global zone"
+fi
+nzver=$(${ZAPLIBDIR}/pkgversion -R "${ALTROOT}/${ZPATH}/root" TRIBmvi-s)
+# the new zone version should be the same as the old
+# as it hasn't been upgraded yet
+if [ "${ozver}" != "${nzver}" ]; then
+    bail "cloned zone version doesn't match original"
+fi
+# correct the name
+APPVER=${NVER/m/0.}
 
 #
 # now do the upgrade
 #
 
 #
-# this is currently unimplemented
+# first download the new packages, we should get both
 #
-exit 1
+CACHE_DIR=$(${ZAPLIBDIR}/zap-cfg cache-dir)
+/usr/lib/brand/appstack/dl-zmvi -v "${APPVER}" -c "${ALTROOT}/${CACHE_DIR}"
+if [ ! -f "${ALTROOT}/${CACHE_DIR}/TRIBmvi-s.${APPVER}.zap" ]; then
+    bail "download of updated mv packages failed"
+fi
+if [ ! -f "${ALTROOT}/${CACHE_DIR}/TRIBmvi-x.${APPVER}.zap" ]; then
+    bail "download of updated mv packages failed"
+fi
+#
+# now delete the old package and install the new one
+#
+zap uninstall -R "${ALTROOT}/${ZPATH}" TRIBmvi-s
+${ZAPLIBDIR}/instzap -R "${ALTROOT}/${ZPATH}" "${ALTROOT}/${CACHE_DIR}/TRIBmvi-s.${APPVER}.zap" TRIBmvi-s
+if [ -d "${ALTROOT}/${ZPATH}/root/var/sadm/pkg/TRIBmvi-x" ]; then
+    zap uninstall -R "${ALTROOT}/${ZPATH}" TRIBmvi-x
+    ${ZAPLIBDIR}/instzap -R "${ALTROOT}/${ZPATH}" "${ALTROOT}/${CACHE_DIR}/TRIBmvi-x.${APPVER}.zap" TRIBmvi-x
+fi
+#
+# there isn't really a mechanism to update the applications in the appstack
+# so they're left at their current versions, relying on binary compatibility
+# to ensure they run correctly
+#
+
+#
+# shut down pkgserv otherwise the BE cannot be unmounted
+#
+/usr/bin/pkgadm sync -R "${ALTROOT}/${ZPATH}" -q
+
+#
+# this is currently untested
+#
+exit 0
