@@ -219,7 +219,12 @@ chown root:sys "$repfile"
 printf "$m_done\n"
 
 # ensure zap catalogs are present
-cp -p "${TEMPLATEPATH}"/etc/zap/repositories/*.catalog "${TEMPLATEPATH}"/etc/zap/repositories/*.aliases "${TEMPLATEPATH}"/etc/zap/repositories/*.overlays "${TEMPLATEPATH}"/etc/zap/repositories/*.filelist.bz2 "$ZONEROOT/etc/zap/repositories"
+cp -p "${TEMPLATEPATH}"/etc/zap/repositories/*.catalog "${TEMPLATEPATH}"/etc/zap/repositories/*.aliases "${TEMPLATEPATH}"/etc/zap/repositories/*.overlays "${TEMPLATEPATH}"/etc/zap/repositories/*.appstacks "${TEMPLATEPATH}"/etc/zap/repositories/*.filelist.bz2 "$ZONEROOT/etc/zap/repositories"
+
+# make sure cacert.pem exists
+if [ -f "${TEMPLATEPATH}"/etc/openssl/cacert.pem.dist ]; then
+    cp -p "${TEMPLATEPATH}"/etc/openssl/cacert.pem.dist "${TEMPLATEPATH}"/etc/openssl/cacert.pem
+fi
 
 printf "$m_complete\n\n" ${SECONDS}
 printf "$m_postnote\n"
